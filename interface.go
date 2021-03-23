@@ -35,9 +35,6 @@ type Connection interface {
 
 }
 
-type Response interface {
-	Byte() []byte
-}
 
 type Context interface {
 	Request() Request
