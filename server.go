@@ -82,7 +82,14 @@ func (srv *server) Start() {
 	}()
 }
 
-func NewServer() Server {
+var _default = New()
+
+// Default 使用默认实例
+func Default() Server {
+	return _default
+}
+// New 返回Server的实例
+func New() Server {
 	return &server{
 		engine: &Engine{routers: map[string]Handler{}},
 		connections: make(map[string]Connection),

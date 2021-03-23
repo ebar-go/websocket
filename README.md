@@ -17,7 +17,7 @@ import (
 
 func main() {
 	router := gin.Default()
-	ws := websocket.NewServer()
+	ws := websocket.Default()
 	router.GET("/ws", func(ctx *gin.Context) {
 		ws.HandleRequest(ctx.Writer, ctx.Request)
 	})
