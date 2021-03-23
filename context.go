@@ -24,22 +24,24 @@ type Context interface {
 
 // context 自定义context
 type context struct {
+	// 请求体
 	request Request
+	// 当前连接
 	conn Connection
 }
-
+// Request implement of Context
 func (ctx *context) Request() Request {
 	return ctx.request
 }
-
+// BindJson implement of Context
 func (ctx *context) BindJson(obj interface{}) error {
 	return json.Unmarshal(ctx.request.Body(), obj)
 }
-
+// Render implement of Context
 func (ctx *context) Render(response Response) {
 	_ = ctx.conn.write(response.Byte())
 }
-
+// Success implement of Context
 func (ctx *context) Success(data interface{}) {
 	ctx.Render(&response{
 		Code:    0,
