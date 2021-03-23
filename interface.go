@@ -30,9 +30,4 @@ type Server interface {
 
 
 
-type Request interface {
-	Uri() string
-	Body() []byte
-}
-
 type Handler func(ctx Context)
