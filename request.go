@@ -8,16 +8,16 @@
 
 package websocket
 
-type MessageRequest struct {
+type request struct {
 	RequestUri string `json:"uri"`
 	RequestBody string `json:"body"`
 }
 
-func (r MessageRequest) Uri() string {
+func (r request) Uri() string {
 	return r.RequestUri
 }
 
-func (r MessageRequest) Body() []byte {
+func (r request) Body() []byte {
 	return []byte(r.RequestBody)
 }
 

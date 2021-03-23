@@ -27,13 +27,6 @@ type Server interface {
 	Start()
 }
 
-type Connection interface {
-	ID() string
-	write(msg []byte) error
-	close(unregister chan <- Connection)
-	listen(engine *Engine)
-
-}
 
 
 type Context interface {

@@ -12,54 +12,57 @@ import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
+	"log"
 	"net/http"
 )
 
+// Connection websocket连接
+type Connection interface {
+	// 连接的唯一ID
+	ID() string
+	// 给客户端发送数据
+	write(msg []byte) error
+	// 关闭连接
+	close()
+	// 获取上下文
+	context() (Context, error)
+}
+
+// connection 自定义websocket连接
 type connection struct {
+	// uuid
 	id string
 	// socket connection
 	sockConn *websocket.Conn
-
 }
-
+// ID implement of Connection
 func (conn *connection) ID() string {
 	return conn.id
 }
 
-// writeMessage 发送数据
+// write implement of Connection
 func (conn *connection) write(msg []byte) error{
 	return conn.sockConn.WriteMessage(websocket.TextMessage, msg)
 }
-
-func (conn *connection) close(unregister chan <- Connection) {
-	_ = conn.sockConn.Close()
-	unregister <- conn
-}
-
-// Listen listen connection
-func (c *connection) listen(engine *Engine) {
-
-	for {
-		ctx, err := c.context()
-		if err != nil {
-			break
-		}
-
-		engine.Run(ctx)
+// close implement of Connection
+func (conn *connection) close() {
+	if err := conn.sockConn.Close(); err != nil {
+		log.Println("close connection: %v", err)
 	}
 }
 
-func (c *connection) context() (Context, error) {
-	_, message, err := c.sockConn.ReadMessage()
+// context implement of Connection
+func (conn *connection) context() (Context, error) {
+	_, message, err := conn.sockConn.ReadMessage()
 	if err != nil {
 		return nil, err
 	}
-	request := new(MessageRequest)
-	if err := json.Unmarshal(message, request); err != nil {
+	req := new(request)
+	if err := json.Unmarshal(message, req); err != nil {
 		// 参数错误
-		//return nil, err
+		log.Printf("unmarshal request: %v, source: %s \n", err, string(message))
 	}
-	ctx := &context{request: request, conn: c}
+	ctx := &context{request: req, conn: conn}
 	return ctx, nil
 }
 

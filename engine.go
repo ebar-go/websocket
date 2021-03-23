@@ -40,6 +40,18 @@ func (engine *Engine) NoRoute(handler Handler) {
 	engine.noRoute = handler
 }
 
+// listen 监听连接
+func (engine *Engine) listen(conn Connection) {
+	for {
+		ctx, err := conn.context()
+		if err != nil {
+			break
+		}
+
+		engine.Run(ctx)
+	}
+}
+
 func notFoundHandler(ctx Context)  {
 	ctx.Render(&response{
 		Code:    http.StatusNotFound,

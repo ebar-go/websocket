@@ -43,9 +43,6 @@ func (s *server) Route(uri string, handler func(ctx Context)) {
 	s.engine.route(uri, handler)
 }
 
-func (s *server) Close(conn Connection) {
-	s.unregisterConn(conn.ID())
-}
 
 func (s *server) Broadcast(response Response) {
 	panic("implement me")
@@ -54,20 +51,16 @@ func (s *server) Broadcast(response Response) {
 // Register register conn
 func (srv *server) registerConn(conn Connection) {
 	go func() {
-		defer conn.close(srv.unregister)
+		defer srv.Close(conn)
 
-		conn.listen(srv.engine)
+		srv.engine.listen(conn)
 	}()
 	srv.register <- conn
 }
 
-// UnRegister delete ws connection
-func (srv *server) unregisterConn(id string) {
-	conn, ok := srv.connections[id]
-
-	if ok {
-		conn.close(srv.unregister)
-	}
+func (srv *server) Close(conn Connection)  {
+	conn.close()
+	srv.unregister <- conn
 }
 
 // Start
