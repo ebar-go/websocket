@@ -37,6 +37,8 @@ type server struct {
 	connections map[string]Connection
 	register    chan Connection
 	unregister  chan Connection
+	connectCallback func(conn Connection)
+	disconnectCallback func(conn Connection)
 }
 // HandleRequest implement of Server
 func (srv *server) HandleRequest(w http.ResponseWriter, r *http.Request) {
@@ -59,16 +61,19 @@ func (srv *server) registerConn(conn Connection) {
 		// 使用engine监听connection
 		srv.engine.listen(conn)
 	}()
+	if srv.connectCallback != nil {
+		srv.connectCallback(conn)
+	}
 	// 通过channel传递connection,防止并发
 	srv.register <- conn
 }
 // HandleConnect implement of Server
-func (srv *server) HandleConnect(f func(conn Connection)) {
-	panic("implement me")
+func (srv *server) HandleConnect(callback func(conn Connection)) {
+	srv.connectCallback = callback
 }
 // HandleDisconnect implement of Server
-func (srv *server) HandleDisconnect(f func(conn Connection)) {
-	panic("implement me")
+func (srv *server) HandleDisconnect(callback func(conn Connection)) {
+	srv.disconnectCallback = callback
 }
 // Route implement of Server
 func (srv *server) Route(uri string, handler func(ctx Context)) {
@@ -99,6 +104,9 @@ func (srv *server) Broadcast(response Response, ignoreConnections ...Connection)
 func (srv *server) Close(conn Connection)  {
 	// 关闭socket
 	conn.close()
+	if srv.disconnectCallback != nil {
+		srv.disconnectCallback(conn)
+	}
 	// 注销conn
 	srv.unregister <- conn
 }

@@ -13,6 +13,7 @@ package main
 import (
 	"github.com/ebar-go/websocket"
 	"github.com/gin-gonic/gin"
+	"log"
 )
 
 func main() {
@@ -20,6 +21,12 @@ func main() {
 	ws := websocket.Default()
 	router.GET("/ws", func(ctx *gin.Context) {
 		ws.HandleRequest(ctx.Writer, ctx.Request)
+	})
+	ws.HandleConnect(func(conn websocket.Connection) {
+		log.Printf("welcome: %s\n", conn.ID())
+	})
+	ws.HandleDisconnect(func(conn websocket.Connection) {
+		log.Printf("goodbye: %s\n", conn.ID())
 	})
 
 	ws.Route("/index", func(ctx websocket.Context) {
@@ -30,6 +37,7 @@ func main() {
 
 	router.Run(":8081")
 }
+
 ```
 
 通过`wscat`去连接websocket:

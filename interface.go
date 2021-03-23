@@ -8,9 +8,4 @@
 
 package websocket
 
-import "net/http"
-
-
-
-
 type Handler func(ctx Context)
