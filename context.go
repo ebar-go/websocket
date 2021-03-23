@@ -10,6 +10,19 @@ package websocket
 
 import "encoding/json"
 
+// Context 上下文
+type Context interface {
+	// 获取请求属性
+	Request() Request
+	// 通过json解析body
+	BindJson(obj interface{}) error
+	// 输出response
+	Render(response Response)
+	// 输出成功的数据
+	Success(data interface{})
+}
+
+// context 自定义context
 type context struct {
 	request Request
 	conn Connection

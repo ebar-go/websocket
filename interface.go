@@ -29,12 +29,6 @@ type Server interface {
 
 
 
-type Context interface {
-	Request() Request
-	BindJson(obj interface{}) error
-	Render(response Response)
-	Success(data interface{})
-}
 
 type Request interface {
 	Uri() string
