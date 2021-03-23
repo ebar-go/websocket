@@ -22,7 +22,7 @@ type Server interface {
 	// 断开连接时触发
 	HandleDisconnect(func (conn Connection))
 	// 映射路由
-	Route(uri string, handler func(ctx Context))
+	Route(uri string, handler Handler)
 	// 关闭连接
 	Close(conn Connection)
 	// 广播
@@ -33,11 +33,17 @@ type Server interface {
 
 // server implement of Server
 type server struct {
+	// 路由引擎
 	engine *Engine
+	// socket连接
 	connections map[string]Connection
+	// conn注册chan
 	register    chan Connection
+	// conn注销chan
 	unregister  chan Connection
+	// 连接回调
 	connectCallback func(conn Connection)
+	// 注销回调
 	disconnectCallback func(conn Connection)
 }
 // HandleRequest implement of Server
@@ -61,6 +67,7 @@ func (srv *server) registerConn(conn Connection) {
 		// 使用engine监听connection
 		srv.engine.listen(conn)
 	}()
+	// 注册回调
 	if srv.connectCallback != nil {
 		srv.connectCallback(conn)
 	}
@@ -76,7 +83,7 @@ func (srv *server) HandleDisconnect(callback func(conn Connection)) {
 	srv.disconnectCallback = callback
 }
 // Route implement of Server
-func (srv *server) Route(uri string, handler func(ctx Context)) {
+func (srv *server) Route(uri string, handler Handler) {
 	srv.engine.route(uri, handler)
 }
 
@@ -93,7 +100,7 @@ func (srv *server) Broadcast(response Response, ignoreConnections ...Connection)
 		}
 		if !skip {
 			if err := conn.write(response.Byte()); err != nil {
-				log.Println("write to [%s]: %v", id, err)
+				log.Printf("write to [%s]: %v", id, err)
 			}
 		}
 	}
@@ -104,6 +111,7 @@ func (srv *server) Broadcast(response Response, ignoreConnections ...Connection)
 func (srv *server) Close(conn Connection)  {
 	// 关闭socket
 	conn.close()
+	// 注销回调
 	if srv.disconnectCallback != nil {
 		srv.disconnectCallback(conn)
 	}
