@@ -12,20 +12,29 @@ import (
 	"net/http"
 	"sync"
 )
-
+// Engine 路由引擎
 type Engine struct {
+	// 读写锁
 	rmw sync.RWMutex
+	// 路由映射,未来考虑升级为支持restful模式
 	routers map[string]Handler
+	// 404
 	noRoute Handler
 }
-
+// route 设置路由映射
 func (engine *Engine) route(uri string, handler Handler) {
+	// 加锁，避免并发
 	engine.rmw.Lock()
 	defer engine.rmw.Unlock()
 	engine.routers[uri] = handler
 }
+// Handle 执行路由
+func (engine *Engine) handle(ctx Context) {
+	// 加锁，避免并发
+	engine.rmw.RLock()
+	defer engine.rmw.RUnlock()
 
-func (engine *Engine) Run(ctx Context) {
+	// 获取路由映射的handler
 	handler, ok := engine.routers[ctx.Request().Uri()]
 	if !ok {
 		// 404
@@ -35,7 +44,7 @@ func (engine *Engine) Run(ctx Context) {
 
 	handler(ctx)
 }
-
+// NoRoute 设置404处理器
 func (engine *Engine) NoRoute(handler Handler) {
 	engine.noRoute = handler
 }
@@ -48,10 +57,10 @@ func (engine *Engine) listen(conn Connection) {
 			break
 		}
 
-		engine.Run(ctx)
+		engine.handle(ctx)
 	}
 }
-
+// notFoundHandler 默认的handler
 func notFoundHandler(ctx Context)  {
 	ctx.Render(&response{
 		Code:    http.StatusNotFound,
