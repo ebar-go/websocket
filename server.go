@@ -26,7 +26,7 @@ type Server interface {
 	// 关闭连接
 	Close(conn Connection)
 	// 广播
-	Broadcast(response Response, ignoreConnections ...Connection)
+	Broadcast(response Response, ignores ...string)
 	// 启动服务
 	Start()
 }
@@ -60,6 +60,7 @@ func (srv *server) HandleRequest(w http.ResponseWriter, r *http.Request) {
 
 // registerConn 注册连接
 func (srv *server) registerConn(conn Connection) {
+	// TODO 用epoll优化
 	// 开启一个协程，异步监听socket的发送
 	go func() {
 		// 连接断开后自动close，释放资源
@@ -88,12 +89,12 @@ func (srv *server) Route(uri string, handler Handler) {
 }
 
 // Broadcast implement of Server
-func (srv *server) Broadcast(response Response, ignoreConnections ...Connection) {
+func (srv *server) Broadcast(response Response, ignores ...string) {
 	for id, conn := range srv.connections {
 		// 跳过指定连接
 		var skip bool
-		for _, ignore := range ignoreConnections {
-			if ignore.ID() == id {
+		for _, ignore := range ignores {
+			if ignore == id {
 				skip = true
 				break
 			}

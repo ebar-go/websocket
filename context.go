@@ -50,5 +50,13 @@ func (ctx *context) Success(data interface{}) {
 	})
 }
 
+func (ctx *context) Error(code int, message string) {
+	ctx.Render(&response{
+		Code:    code,
+		Message: message,
+		Data:    nil,
+	})
+}
+
 
 
