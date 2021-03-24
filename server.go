@@ -45,6 +45,8 @@ type server struct {
 	connectCallback func(conn Connection)
 	// 注销回调
 	disconnectCallback func(conn Connection)
+
+	epoller *epoll
 }
 // HandleRequest implement of Server
 func (srv *server) HandleRequest(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +62,6 @@ func (srv *server) HandleRequest(w http.ResponseWriter, r *http.Request) {
 
 // registerConn 注册连接
 func (srv *server) registerConn(conn Connection) {
-	// TODO 用epoll优化
 	// 开启一个协程，异步监听socket的发送
 	go func() {
 		// 连接断开后自动close，释放资源

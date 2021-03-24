@@ -16,7 +16,7 @@ import (
 
 func main() {
 	router := gin.Default()
-	ws := websocket.Default()
+	ws := websocket.EpollServer()
 	router.GET("/ws", func(ctx *gin.Context) {
 		ws.HandleRequest(ctx.Writer, ctx.Request)
 	})
@@ -33,5 +33,5 @@ func main() {
 
 	ws.Start()
 
-	router.Run(":8081")
+	router.Run(":8091")
 }

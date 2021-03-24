@@ -9,42 +9,33 @@
 package websocket
 
 import (
-	"github.com/gorilla/websocket"
 	"golang.org/x/sys/unix"
-	"reflect"
 	"sync"
 	"syscall"
 )
 
 type epoll struct {
 	fd int
-	connections map[int]*websocket.Conn
+	connections map[int]Connection
 	lock sync.RWMutex
 }
 
 func MkEpoll() (*epoll, error) {
-	fd, err := unix.EpollCreate(0)
+	fd, err := unix.EpollCreate(1)
 	if err != nil {
 		return nil, err
 	}
 
 	return &epoll{
 		fd:          fd,
-		connections: make(map[int]*websocket.Conn),
+		connections: make(map[int]Connection),
 		lock:        sync.RWMutex{},
 	}, nil
 }
 
-func websocketFD(conn *websocket.Conn) int {
-	connVal := reflect.Indirect(reflect.ValueOf(conn).FieldByName("conn").Elem())
-	tcpConn := reflect.Indirect(connVal).FieldByName("conn")
-	fdVal := tcpConn.FieldByName("fd")
-	pfdVal := reflect.Indirect(fdVal).FieldByName("pfd")
-	return int(pfdVal.FieldByName("Sysfd").Int())
-}
 
-func (e *epoll) Add(conn *websocket.Conn) error {
-	fd := websocketFD(conn)
+func (e *epoll) Add(conn Connection) error {
+	fd := conn.fd()
 	err := unix.EpollCtl(e.fd, unix.EPOLL_CTL_ADD, fd, &unix.EpollEvent{Events: unix.POLLIN | unix.POLLHUP, Fd: int32(fd)})
 	if err != nil {
 		return err
@@ -56,8 +47,8 @@ func (e *epoll) Add(conn *websocket.Conn) error {
 	return nil
 }
 
-func (e *epoll) Remove(conn *websocket.Conn) error{
-	fd := websocketFD(conn)
+func (e *epoll) Remove(conn Connection) error{
+	fd := conn.fd()
 	err := unix.EpollCtl(e.fd, syscall.EPOLL_CTL_DEL, fd, nil)
 	if err != nil {
 		return err
@@ -69,7 +60,7 @@ func (e *epoll) Remove(conn *websocket.Conn) error{
 	return nil
 }
 
-func (e *epoll) Wait() ([]*websocket.Conn, error) {
+func (e *epoll) Wait() ([]Connection, error) {
 	events := make([]unix.EpollEvent, 100)
 	n, err := unix.EpollWait(e.fd, events, 100)
 	if err != nil {
@@ -77,7 +68,7 @@ func (e *epoll) Wait() ([]*websocket.Conn, error) {
 	}
 	e.lock.RLock()
 	defer e.lock.RUnlock()
-	var connections []*websocket.Conn
+	var connections []Connection
 	for i := 0; i < n; i++ {
 		conn := e.connections[int(events[i].Fd)]
 		connections = append(connections, conn)

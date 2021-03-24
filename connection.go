@@ -13,7 +13,9 @@ import (
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
 	"log"
+	"net"
 	"net/http"
+	"reflect"
 )
 
 // Connection websocket连接
@@ -26,6 +28,8 @@ type Connection interface {
 	close()
 	// 获取上下文
 	context() (Context, error)
+	// fd
+	fd() int
 }
 
 // connection 自定义websocket连接
@@ -67,6 +71,23 @@ func (conn *connection) context() (Context, error) {
 }
 
 
+func (conn *connection) fd() int {
+
+	return socketFD(conn.sockConn.UnderlyingConn())
+}
+
+func socketFD(conn net.Conn) int {
+	//tls := reflect.TypeOf(conn.UnderlyingConn()) == reflect.TypeOf(&tls.Conn{})
+	// Extract the file descriptor associated with the connection
+	//connVal := reflect.Indirect(reflect.ValueOf(conn)).FieldByName("conn").Elem()
+	tcpConn := reflect.Indirect(reflect.ValueOf(conn)).FieldByName("conn")
+	//if tls {
+	//	tcpConn = reflect.Indirect(tcpConn.Elem())
+	//}
+	fdVal := tcpConn.FieldByName("fd")
+	pfdVal := reflect.Indirect(fdVal).FieldByName("pfd")
+	return int(pfdVal.FieldByName("Sysfd").Int())
+}
 var u = upGrader() // use default options
 func upGrader() websocket.Upgrader {
 	return websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
