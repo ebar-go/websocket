@@ -1,5 +1,5 @@
 # websocket
-像web服务一样去处理websocket
+websocket框架，让开发者像开发http接口一样方便的去开发websocket应用。
 
 
 ## 安装
