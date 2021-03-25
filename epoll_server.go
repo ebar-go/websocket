@@ -11,19 +11,12 @@ package websocket
 import (
 	"log"
 	"net/http"
-	"sync"
 )
 
 
 // epollServer implement of Server
 type epollServer struct {
-	// 路由引擎
-	engine *Engine
-
-	// 连接回调
-	connectCallback func(conn Connection)
-	// 注销回调
-	disconnectCallback func(conn Connection)
+	server
 
 	epoller *epoll
 }
@@ -99,10 +92,7 @@ func (srv *epollServer) Close(conn Connection)  {
 
 // Start implement of Server
 func (srv *epollServer) Start() {
-	// 设置默认的404路由
-	if srv.engine.noRoute == nil {
-		srv.engine.NoRoute(notFoundHandler)
-	}
+
 	// epoll模式
 	go func() {
 		for {
@@ -122,19 +112,14 @@ func (srv *epollServer) Start() {
 		}
 	}()
 }
-
+// EpollServer 通过epool模式实现的websocket服务
 func EpollServer() Server {
 	epoller, err := MkEpoll()
 	if err != nil {
 		log.Fatalf("create epoll:%v\n", err)
 	}
 	return &epollServer{
-		engine:             &Engine{
-			rmw:     sync.RWMutex{},
-			routers: map[string]Handler{},
-		},
-		connectCallback:    nil,
-		disconnectCallback: nil,
+		server: base(),
 		epoller:            epoller,
 	}
 }

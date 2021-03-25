@@ -84,9 +84,9 @@ License.  Each licensee is addressed as "you".  "Licensees" and
   To "modify" a work means to copy from or adapt all or part of the work
 in a fashion requiring copyright permission, other than the making of an
 exact copy.  The resulting work is called a "modified version" of the
-earlier work or a work "based on" the earlier work.
+earlier work or a work "serverd on" the earlier work.
 
-  A "covered work" means either the unmodified Program or a work based
+  A "covered work" means either the unmodified Program or a work serverd
 on the Program.
 
   To "propagate" a work means to do anything with it that, without
@@ -207,7 +207,7 @@ and you may offer support or warranty protection for a fee.
 
   5. Conveying Modified Source Versions.
 
-  You may convey a work based on the Program, or the modifications to
+  You may convey a work serverd on the Program, or the modifications to
 produce it from the Program, in the form of source code under the
 terms of section 4, provided that you also meet all of these conditions:
 
@@ -471,7 +471,7 @@ sale, or importing the Program or any portion of it.
   11. Patents.
 
   A "contributor" is a copyright holder who authorizes use under this
-License of the Program or a work on which the Program is based.  The
+License of the Program or a work on which the Program is serverd.  The
 work thus licensed is called the contributor's "contributor version".
 
   A contributor's "essential patent claims" are all patent claims
@@ -516,7 +516,7 @@ covered work, and grant a patent license to some of the parties
 receiving the covered work authorizing them to use, propagate, modify
 or convey a specific copy of the covered work, then the patent license
 you grant is automatically extended to all recipients of the covered
-work and works based on it.
+work and works serverd on it.
 
   A patent license is "discriminatory" if it does not include within
 the scope of its coverage, prohibits the exercise of, or is
@@ -524,7 +524,7 @@ conditioned on the non-exercise of one or more of the rights that are
 specifically granted under this License.  You may not convey a covered
 work if you are a party to an arrangement with a third party that is
 in the business of distributing software, under which you make payment
-to the third party based on the extent of your activity of conveying
+to the third party serverd on the extent of your activity of conveying
 the work, and under which the third party grants, to any of the
 parties who would receive the covered work from you, a discriminatory
 patent license (a) in connection with copies of the covered work

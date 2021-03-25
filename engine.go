@@ -46,6 +46,9 @@ func (engine *Engine) handle(ctx Context) {
 }
 // NoRoute 设置404处理器
 func (engine *Engine) NoRoute(handler Handler) {
+	if handler == nil {
+		return
+	}
 	engine.noRoute = handler
 }
 
@@ -67,4 +70,8 @@ func notFoundHandler(ctx Context)  {
 		Message: "404 not found",
 		Data:    nil,
 	})
+}
+
+func engine() *Engine {
+	return &Engine{noRoute: notFoundHandler, routers: map[string]Handler{}}
 }

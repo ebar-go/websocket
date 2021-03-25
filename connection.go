@@ -10,12 +10,11 @@ package websocket
 
 import (
 	"encoding/json"
+	"github.com/ebar-go/websocket/utils"
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
 	"log"
-	"net"
 	"net/http"
-	"reflect"
 )
 
 // Connection websocket连接
@@ -70,36 +69,16 @@ func (conn *connection) context() (Context, error) {
 	return ctx, nil
 }
 
-
+// fd
 func (conn *connection) fd() int {
-
-	return socketFD(conn.sockConn.UnderlyingConn())
+	return utils.SocketFD(conn.sockConn.UnderlyingConn())
 }
-
-func socketFD(conn net.Conn) int {
-	//tls := reflect.TypeOf(conn.UnderlyingConn()) == reflect.TypeOf(&tls.Conn{})
-	// Extract the file descriptor associated with the connection
-	//connVal := reflect.Indirect(reflect.ValueOf(conn)).FieldByName("conn").Elem()
-	tcpConn := reflect.Indirect(reflect.ValueOf(conn)).FieldByName("conn")
-	//if tls {
-	//	tcpConn = reflect.Indirect(tcpConn.Elem())
-	//}
-	fdVal := tcpConn.FieldByName("fd")
-	pfdVal := reflect.Indirect(fdVal).FieldByName("pfd")
-	return int(pfdVal.FieldByName("Sysfd").Int())
-}
-var u = upGrader() // use default options
-func upGrader() websocket.Upgrader {
-	return websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
-}
-// WebsocketConn return web socket connection
+// newConnection
 func newConnection(w http.ResponseWriter, r *http.Request) (Connection, error) {
-	respHeader := http.Header{"Sec-WebSocket-Protocol": []string{r.Header.Get("Sec-WebSocket-Protocol")}}
-	conn, err := u.Upgrade(w, r, respHeader)
+	conn, err := utils.WebsocketConn(w, r)
 	if err != nil {
 		return nil, err
 	}
-
 	return &connection{
 		id:   uuid.NewV4().String(),
 		sockConn: conn,
