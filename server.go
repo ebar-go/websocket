@@ -19,7 +19,7 @@ type server struct {
 }
 
 func base() server {
-	return server{engine: engine()}
+	return server{engine: newEngine()}
 }
 
 // HandleConnect implement of Server

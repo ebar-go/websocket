@@ -44,18 +44,6 @@ func (srv *epollServer) registerConn(conn Connection) {
 		srv.connectCallback(conn)
 	}
 }
-// HandleConnect implement of Server
-func (srv *epollServer) HandleConnect(callback func(conn Connection)) {
-	srv.connectCallback = callback
-}
-// HandleDisconnect implement of Server
-func (srv *epollServer) HandleDisconnect(callback func(conn Connection)) {
-	srv.disconnectCallback = callback
-}
-// Route implement of Server
-func (srv *epollServer) Route(uri string, handler Handler) {
-	srv.engine.route(uri, handler)
-}
 
 // Broadcast implement of Server
 func (srv *epollServer) Broadcast(response Response, ignores ...string) {
@@ -112,7 +100,7 @@ func (srv *epollServer) Start() {
 		}
 	}()
 }
-// EpollServer 通过epool模式实现的websocket服务
+// EpollServer 通过epoll模式实现的websocket服务
 func EpollServer() Server {
 	epoller, err := MkEpoll()
 	if err != nil {
@@ -120,6 +108,6 @@ func EpollServer() Server {
 	}
 	return &epollServer{
 		server: base(),
-		epoller:            epoller,
+		epoller: epoller,
 	}
 }

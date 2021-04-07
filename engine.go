@@ -71,7 +71,7 @@ func notFoundHandler(ctx Context)  {
 		Data:    nil,
 	})
 }
-
-func engine() *Engine {
+// newEngine 实例
+func newEngine() *Engine {
 	return &Engine{noRoute: notFoundHandler, routers: map[string]Handler{}}
 }
