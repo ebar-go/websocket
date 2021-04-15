@@ -9,40 +9,32 @@
 package websocket
 
 import (
+	cmap "github.com/orcaman/concurrent-map"
 	"net/http"
-	"sync"
 )
 // Engine 路由引擎
 type Engine struct {
-	// 读写锁
-	rmw sync.RWMutex
 	// 路由映射,未来考虑升级为支持restful模式
-	routers map[string]Handler
+	routers cmap.ConcurrentMap
 	// 404
 	noRoute Handler
 }
 // route 设置路由映射
 func (engine *Engine) route(uri string, handler Handler) {
-	// 加锁，避免并发
-	engine.rmw.Lock()
-	defer engine.rmw.Unlock()
-	engine.routers[uri] = handler
+	engine.routers.Set(uri, handler)
 }
 // Handle 执行路由
 func (engine *Engine) handle(ctx Context) {
-	// 加锁，避免并发
-	engine.rmw.RLock()
-	defer engine.rmw.RUnlock()
 
 	// 获取路由映射的handler
-	handler, ok := engine.routers[ctx.Request().Uri()]
-	if !ok {
+	handler, exist := engine.routers.Get(ctx.Uri())
+	if !exist {
 		// 404
 		engine.noRoute(ctx)
 		return
 	}
 
-	handler(ctx)
+	handler.(Handler)(ctx)
 }
 // NoRoute 设置404处理器
 func (engine *Engine) NoRoute(handler Handler) {
@@ -73,5 +65,5 @@ func notFoundHandler(ctx Context)  {
 }
 // newEngine 实例
 func newEngine() *Engine {
-	return &Engine{noRoute: notFoundHandler, routers: map[string]Handler{}}
+	return &Engine{noRoute: notFoundHandler, routers: cmap.New()}
 }

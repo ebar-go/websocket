@@ -19,12 +19,12 @@ import (
 
 // Connection websocket连接
 type Connection interface {
-	// 连接的唯一ID
+	// 唯一标识
 	ID() string
 	// 给客户端发送数据
 	write(msg []byte) error
 	// 关闭连接
-	close()
+	close() error
 	// 获取上下文
 	context() (Context, error)
 	// fd
@@ -48,10 +48,8 @@ func (conn *connection) write(msg []byte) error{
 	return conn.sockConn.WriteMessage(websocket.TextMessage, msg)
 }
 // close implement of Connection
-func (conn *connection) close() {
-	if err := conn.sockConn.Close(); err != nil {
-		log.Println("close connection: %v", err)
-	}
+func (conn *connection) close() error{
+	return conn.sockConn.Close()
 }
 
 // context implement of Connection

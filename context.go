@@ -8,12 +8,15 @@
 
 package websocket
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"log"
+)
 
 // Context 上下文
 type Context interface {
-	// 获取请求属性
-	Request() Request
+	// 获取请求资源
+	Uri() string
 	// 通过json解析body
 	BindJson(obj interface{}) error
 	// 输出response
@@ -29,9 +32,9 @@ type context struct {
 	// 当前连接
 	conn Connection
 }
-// Request implement of Context
-func (ctx *context) Request() Request {
-	return ctx.request
+// Uri return request uri
+func (ctx *context) Uri() string {
+	return ctx.request.Uri()
 }
 // BindJson implement of Context
 func (ctx *context) BindJson(obj interface{}) error {
@@ -39,7 +42,9 @@ func (ctx *context) BindJson(obj interface{}) error {
 }
 // Render implement of Context
 func (ctx *context) Render(response Response) {
-	_ = ctx.conn.write(response.Byte())
+	if err := ctx.conn.write(response.Byte()); err != nil {
+		log.Println("unable to write message:", err.Error())
+	}
 }
 // Success implement of Context
 func (ctx *context) Success(data interface{}) {
