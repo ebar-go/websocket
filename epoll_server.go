@@ -47,7 +47,21 @@ func (srv *epollServer) registerConn(conn Connection) {
 
 // Broadcast implement of Server
 func (srv *epollServer) Broadcast(response Response, ignores ...string) {
-	for _, conn := range srv.epoller.connections {
+	if len(ignores) == 0 {
+		// not ignore
+		srv.epoller.connections.IterCb(func(key string, v interface{}) {
+			conn := v.(Connection)
+			if err := conn.write(response.Byte()); err != nil {
+				log.Printf("write to [%s]: %v", conn.ID(), err)
+			}
+		})
+
+		return
+	}
+
+	// has ignores
+	srv.epoller.connections.IterCb(func(key string, v interface{}) {
+		conn := v.(Connection)
 		// 跳过指定连接
 		var skip bool
 		for _, ignore := range ignores {
@@ -61,7 +75,7 @@ func (srv *epollServer) Broadcast(response Response, ignores ...string) {
 				log.Printf("write to [%s]: %v", conn.ID(), err)
 			}
 		}
-	}
+	})
 }
 
 
@@ -80,15 +94,16 @@ func (srv *epollServer) Close(conn Connection)  {
 
 // Start implement of Server
 func (srv *epollServer) Start() {
-
 	// epoll模式
 	go func() {
 		for {
+			// active connections
 			connections, err := srv.epoller.Wait()
 			if err != nil {
 				log.Printf("Failed to epoll wait %v", err)
 				continue
 			}
+			// handle context
 			for _, conn := range connections {
 				ctx, err := conn.context()
 				if err != nil {

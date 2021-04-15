@@ -9,17 +9,20 @@
 package websocket
 
 import (
+	"fmt"
+	cmap "github.com/orcaman/concurrent-map"
 	"golang.org/x/sys/unix"
-	"sync"
 	"syscall"
 )
-
+// epoll struct
 type epoll struct {
+	// 句柄
 	fd int
-	connections map[int]Connection
-	lock sync.RWMutex
+	// socket 连接
+	connections cmap.ConcurrentMap
 }
 
+// MkEpoll return epoll instance
 func MkEpoll() (*epoll, error) {
 	fd, err := unix.EpollCreate(1)
 	if err != nil {
@@ -28,9 +31,13 @@ func MkEpoll() (*epoll, error) {
 
 	return &epoll{
 		fd:          fd,
-		connections: make(map[int]Connection),
-		lock:        sync.RWMutex{},
+		connections: cmap.New(),
 	}, nil
+}
+
+// key format map index
+func (e *epoll) key(fd int) string {
+	return fmt.Sprintf("f%d", fd)
 }
 
 
@@ -41,9 +48,7 @@ func (e *epoll) Add(conn Connection) error {
 		return err
 	}
 
-	e.lock.Lock()
-	defer e.lock.Unlock()
-	e.connections[fd] = conn
+	e.connections.Set(e.key(fd), conn)
 	return nil
 }
 
@@ -53,9 +58,7 @@ func (e *epoll) Remove(conn Connection) error{
 	if err != nil {
 		return err
 	}
-	e.lock.Lock()
-	defer e.lock.Unlock()
-	delete(e.connections, fd)
+	e.connections.Remove(e.key(fd))
 
 	return nil
 }
@@ -66,12 +69,13 @@ func (e *epoll) Wait() ([]Connection, error) {
 	if err != nil {
 		return nil, err
 	}
-	e.lock.RLock()
-	defer e.lock.RUnlock()
-	var connections []Connection
+	connections := make([]Connection, 0, n)
 	for i := 0; i < n; i++ {
-		conn := e.connections[int(events[i].Fd)]
-		connections = append(connections, conn)
+		conn, exist := e.connections.Get(e.key(int(events[i].Fd)))
+		if exist {
+			connections[i] = conn.(Connection)
+		}
+
 	}
 	return connections, nil
 }
