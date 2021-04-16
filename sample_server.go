@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	cmap "github.com/orcaman/concurrent-map"
 	"log"
 	"net/http"
 )
@@ -9,12 +10,11 @@ import (
 type simpleServer struct {
 	server
 	// socket连接
-	connections map[string]Connection
+	connections cmap.ConcurrentMap
 	// conn注册chan
 	register    chan Connection
 	// conn注销chan
 	unregister  chan Connection
-
 }
 // HandleRequest implement of Server
 func (srv *simpleServer) HandleRequest(w http.ResponseWriter, r *http.Request) {
@@ -37,32 +37,41 @@ func (srv *simpleServer) registerConn(conn Connection) {
 		// 使用engine监听connection
 		srv.engine.listen(conn)
 	}()
+
+	// 通过channel传递connection,防止并发
+	srv.register <- conn
 	// 注册回调
 	if srv.connectCallback != nil {
 		srv.connectCallback(conn)
 	}
-	// 通过channel传递connection,防止并发
-	srv.register <- conn
+
 }
 
 
 // Broadcast implement of Server
 func (srv *simpleServer) Broadcast(response Response, ignores ...string) {
-	for id, conn := range srv.connections {
-		// 跳过指定连接
-		var skip bool
-		for _, ignore := range ignores {
-			if ignore == id {
-				skip = true
-				break
-			}
-		}
-		if !skip {
+	if len(ignores) == 0 {
+		srv.connections.IterCb(func(key string, v interface{}) {
+			conn := v.(Connection)
 			if err := conn.write(response.Byte()); err != nil {
-				log.Printf("write to [%s]: %v", id, err)
+				log.Printf("write to [%s]: %v", key, err)
+			}
+		})
+		return
+	}
+
+	srv.connections.IterCb(func(key string, v interface{}) {
+		for _, ignore := range ignores {
+			if key == ignore {
+				return
 			}
 		}
-	}
+		conn := v.(Connection)
+		if err := conn.write(response.Byte()); err != nil {
+			log.Printf("write to [%s]: %v", key, err)
+		}
+	})
+
 }
 
 
@@ -70,28 +79,26 @@ func (srv *simpleServer) Broadcast(response Response, ignores ...string) {
 func (srv *simpleServer) Close(conn Connection)  {
 	// 关闭socket
 	conn.close()
+	// 注销conn
+	srv.unregister <- conn
+
 	// 注销回调
 	if srv.disconnectCallback != nil {
 		srv.disconnectCallback(conn)
 	}
-	// 注销conn
-	srv.unregister <- conn
+
 }
 
 // Start implement of Server
 func (srv *simpleServer) Start() {
-	// 设置默认的404路由
-	if srv.engine.noRoute == nil {
-		srv.engine.NoRoute(notFoundHandler)
-	}
-
 	go func() {
 		for {
 			select {
 			case conn := <-srv.register: // 注册connection
-				srv.connections[conn.ID()] = conn
+				srv.connections.Set(conn.ID(), conn)
 			case conn := <-srv.unregister: // 注销connection
-				delete(srv.connections, conn.ID())
+				srv.connections.Remove(conn.ID())
+
 			}
 		}
 	}()
@@ -101,8 +108,8 @@ func (srv *simpleServer) Start() {
 func SampleServer() Server {
 	return &simpleServer{
 		server: base(),
-		connections: make(map[string]Connection),
-		register:    make(chan Connection),
-		unregister:  make(chan Connection),
+		connections: cmap.New(),
+		register:    make(chan Connection, 100),
+		unregister:  make(chan Connection, 100),
 	}
 }

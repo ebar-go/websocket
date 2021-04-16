@@ -9,6 +9,7 @@
 package websocket
 
 import (
+	"github.com/ebar-go/websocket/epoll"
 	"log"
 	"net/http"
 )
@@ -18,7 +19,7 @@ import (
 type epollServer struct {
 	server
 
-	epoller *epoll
+	epoller epoll.Epoll
 }
 // HandleRequest implement of Server
 func (srv *epollServer) HandleRequest(w http.ResponseWriter, r *http.Request) {
@@ -29,67 +30,25 @@ func (srv *epollServer) HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srv.registerConn(conn)
-}
-
-// registerConn 注册连接
-func (srv *epollServer) registerConn(conn Connection) {
-	if err := srv.epoller.Add(conn); err != nil {
+	// epoll add socket fd
+	if err := srv.epoller.Add(conn.fd()); err != nil {
 		log.Printf("Failed to add connection")
-		conn.close()
-		return
-	}
-	// 注册回调
-	if srv.connectCallback != nil {
-		srv.connectCallback(conn)
-	}
-}
-
-// Broadcast implement of Server
-func (srv *epollServer) Broadcast(response Response, ignores ...string) {
-	if len(ignores) == 0 {
-		// not ignore
-		srv.epoller.connections.IterCb(func(key string, v interface{}) {
-			conn := v.(Connection)
-			if err := conn.write(response.Byte()); err != nil {
-				log.Printf("write to [%s]: %v", conn.ID(), err)
-			}
-		})
-
+		_ = conn.close()
 		return
 	}
 
-	// has ignores
-	srv.epoller.connections.IterCb(func(key string, v interface{}) {
-		conn := v.(Connection)
-		// 跳过指定连接
-		var skip bool
-		for _, ignore := range ignores {
-			if ignore == conn.ID() {
-				skip = true
-				break
-			}
-		}
-		if !skip {
-			if err := conn.write(response.Byte()); err != nil {
-				log.Printf("write to [%s]: %v", conn.ID(), err)
-			}
-		}
-	})
-}
+	srv.AddConnection(conn)
 
+
+}
 
 // Close implement of Server
 func (srv *epollServer) Close(conn Connection)  {
-	if err := srv.epoller.Remove(conn); err != nil {
+	if err := srv.epoller.Remove(conn.fd()); err != nil {
 		log.Printf("Failed to remove %v", err)
 	}
-	// 关闭socket
-	conn.close()
-	// 注销回调
-	if srv.disconnectCallback != nil {
-		srv.disconnectCallback(conn)
-	}
+
+	srv.RemoveConnection(conn)
 }
 
 // Start implement of Server
@@ -98,13 +57,18 @@ func (srv *epollServer) Start() {
 	go func() {
 		for {
 			// active connections
-			connections, err := srv.epoller.Wait()
+			fds, err := srv.epoller.Wait()
 			if err != nil {
-				log.Printf("Failed to epoll wait %v", err)
+				log.Println("unable to get active socket connection from epoll:", err)
 				continue
 			}
 			// handle context
-			for _, conn := range connections {
+			for _, fd := range fds {
+				conn, exist := srv.GetConnection(fd)
+				if !exist {
+					continue
+				}
+
 				ctx, err := conn.context()
 				if err != nil {
 					srv.Close(conn)
@@ -117,12 +81,12 @@ func (srv *epollServer) Start() {
 }
 // EpollServer 通过epoll模式实现的websocket服务
 func EpollServer() Server {
-	epoller, err := MkEpoll()
+	e, err := epoll.Create()
 	if err != nil {
 		log.Fatalf("create epoll:%v\n", err)
 	}
 	return &epollServer{
 		server: base(),
-		epoller: epoller,
+		epoller: e,
 	}
 }

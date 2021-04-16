@@ -37,6 +37,7 @@ type connection struct {
 	id string
 	// socket connection
 	sockConn *websocket.Conn
+	sockFD int
 }
 // ID implement of Connection
 func (conn *connection) ID() string {
@@ -69,7 +70,7 @@ func (conn *connection) context() (Context, error) {
 
 // fd
 func (conn *connection) fd() int {
-	return utils.SocketFD(conn.sockConn.UnderlyingConn())
+	return conn.sockFD
 }
 // newConnection
 func newConnection(w http.ResponseWriter, r *http.Request) (Connection, error) {
@@ -80,5 +81,6 @@ func newConnection(w http.ResponseWriter, r *http.Request) (Connection, error) {
 	return &connection{
 		id:   uuid.NewV4().String(),
 		sockConn: conn,
+		sockFD: utils.SocketFD(conn.UnderlyingConn()),
 	}, nil
 }
