@@ -61,5 +61,39 @@ wscat -c ws://127.0.0.1:8081/ws
 < {"code":404,"message":"404 not found","data":null}
 ```
 
+## 请求参数
+- uri: 路由
+- body: 数据内容
+```json
+{"uri":"/index","body": {"name": "websocket"}}
+```
+- 获取参数
+```go
+package main
+
+import (
+	"github.com/ebar-go/websocket"
+)
+
+func main() {
+    ws := websocket.NewServer()
+    // ...
+	// 路由以及handler
+	ws.Route("/index", func(ctx websocket.Context) {
+		// 定义结构体
+		req := struct {
+			Name string `json:"name"`
+		}{}
+		// 通过BindJson解析数据
+		if err := ctx.BindJson(&req); err != nil {
+			ctx.Error(1001, "参数错误")
+			return
+		}
+		ctx.Success(websocket.Data{
+			"name": req.Name,
+		})
+	})
+}
+```
 ## 压力测试
 TODO
