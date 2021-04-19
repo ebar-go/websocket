@@ -8,16 +8,21 @@
 
 package websocket
 
-import "net/http"
+import (
+	"github.com/ebar-go/websocket/epoll"
+	cmap "github.com/orcaman/concurrent-map"
+	"log"
+	"net/http"
+)
 
 // Server websocket服务
 type Server interface {
 	// 处理请求
 	HandleRequest(w http.ResponseWriter, r *http.Request)
 	// 连接时触发
-	HandleConnect(func (conn Connection))
+	HandleConnect(callback Callback)
 	// 断开连接时触发
-	HandleDisconnect(func (conn Connection))
+	HandleDisconnect(callback Callback)
 	// 映射路由
 	Route(uri string, handler Handler)
 	// 关闭连接
@@ -28,4 +33,18 @@ type Server interface {
 	Start()
 }
 
-type Handler func(ctx Context)
+
+
+// NewServer 多进程server，相比epoll的单进程，降低了延迟
+func NewServer(opts ...Option) Server {
+	e, err := epoll.Create()
+	if err != nil {
+		log.Fatalf("create epoll:%v\n", err)
+	}
+	return &server{
+		engine: newEngine(),
+		connections: cmap.New(),
+		epoller: e ,
+		workers: newWorkerPool(opts...),
+	}
+}

@@ -7,5 +7,5 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/satori/go.uuid v1.2.0
-	golang.org/x/sys v0.0.0-20200116001909-b77594299b42
+	golang.org/x/sys v0.0.0-20210415045647-66c3f260301c
 )

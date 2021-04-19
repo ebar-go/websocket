@@ -19,6 +19,10 @@ type Engine struct {
 	// 404
 	noRoute Handler
 }
+
+// Handler
+type Handler func(ctx Context)
+
 // route 设置路由映射
 func (engine *Engine) route(uri string, handler Handler) {
 	engine.routers.Set(uri, handler)
@@ -27,7 +31,7 @@ func (engine *Engine) route(uri string, handler Handler) {
 func (engine *Engine) handle(ctx Context) {
 
 	// 获取路由映射的handler
-	handler, exist := engine.routers.Get(ctx.Uri())
+	handler, exist := engine.routers.Get(ctx.RequestUri())
 	if !exist {
 		// 404
 		engine.noRoute(ctx)
@@ -57,11 +61,7 @@ func (engine *Engine) listen(conn Connection) {
 }
 // notFoundHandler 默认的handler
 func notFoundHandler(ctx Context)  {
-	ctx.Render(&response{
-		Code:    http.StatusNotFound,
-		Message: "404 not found",
-		Data:    nil,
-	})
+	ctx.Error(http.StatusNotFound, "404 not found")
 }
 // newEngine 实例
 func newEngine() *Engine {

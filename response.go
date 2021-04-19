@@ -11,13 +11,13 @@ package websocket
 import "encoding/json"
 
 // Response websocket的响应数据结构
-type Response interface {
-	// 输出为[]byte
-	Byte() []byte
-}
+//type Response interface {
+//	// 输出为[]byte
+//	Byte() []byte
+//}
 
 // response 自定义响应内容
-type response struct {
+type Response struct {
 	// 状态码,0为成功
 	Code int `json:"code"`
 	// 提示信息
@@ -27,7 +27,7 @@ type response struct {
 }
 
 // Byte implement of Response
-func (r response) Byte() []byte {
+func (r Response) Byte() []byte {
 	b, _ := json.Marshal(r)
 	return b
 }

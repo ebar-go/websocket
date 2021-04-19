@@ -8,26 +8,13 @@
 
 package websocket
 
-// Request ws请求
-type Request interface {
-	// 获取请求路由
-	Uri() string
-	// 获取请求内容
-	Body() []byte
-}
 // request 自定义Request
-type request struct {
-	RequestUri string `json:"uri"`
-	RequestBody string `json:"body"`
+type Request struct {
+	Uri string `json:"uri"`
+	Body string `json:"body"`
 }
 
-// Uri implement of Request
-func (r request) Uri() string {
-	return r.RequestUri
-}
-
-// Body implement of Request
-func (r request) Body() []byte {
-	return []byte(r.RequestBody)
+func (req Request) body() []byte {
+	return []byte(req.Body)
 }
 

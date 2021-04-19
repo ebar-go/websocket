@@ -1,5 +1,6 @@
 # websocket
-websocket框架，让开发者像开发http接口一样方便的去开发websocket应用。
+- 基于Epoll和WorkerPool实现的高性能websocket框架。 
+- 提供路由模式，让开发者像开发http接口一样方便的去开发websocket应用。
 
 
 ## 安装
@@ -22,7 +23,10 @@ func main() {
 	router := gin.Default()
 	//ws := websocket.SampleServer() // 基于goroutine-per-conn实现的server
 	//ws := websocket.EpollServer() // 基于epoll实现的server
-	ws := websocket.WorkerPoolServer(50, 100000) // 基于workerPool实现的epollServer
+	ws := websocket.NewServer(
+		websocket.WithWorkerNumber(1),  // 设置worker数量，可选，默认为50
+		websocket.WithTaskNumber(2), // 设置task数量，可选，默认为100000
+	) // 基于workerPool实现的epollServer
 	// 用于创建websocket连接
 	router.GET("/ws", func(ctx *gin.Context) {
 		ws.HandleRequest(ctx.Writer, ctx.Request)
@@ -55,20 +59,6 @@ wscat -c ws://127.0.0.1:8081/ws
 < {"code":0,"message":"success","data":"hello,world"}
 > {"uri":"/home"}
 < {"code":404,"message":"404 not found","data":null}
-```
-
-## 特性
-- 高并发
-- 提供三种模式的websocket服务
-```go
- // 基于goroutine-per-conn实现的普通模式
-sampleServer := websocket.SampleServer()
-
-// 基于epoll实现的server
-epollServer := websocket.EpollServer()
-
-// 基于workerPool实现的epollServer
-workerPollServer := websocket.WorkerPoolServer(50, 100000)
 ```
 
 ## 压力测试
