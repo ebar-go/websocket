@@ -1,22 +1,9 @@
-/**
- * @Author: Hongker
- * @Description:
- * @File:  response
- * @Version: 1.0.0
- * @Date: 2021/3/23 20:08
- */
-
-package websocket
+package context
 
 import "encoding/json"
 
-// Response websocket的响应数据结构
-//type Response interface {
-//	// 输出为[]byte
-//	Byte() []byte
-//}
 
-// response 自定义响应内容
+// Response 自定义响应内容
 type Response struct {
 	// 状态码,0为成功
 	Code int `json:"code"`

@@ -1,14 +1,13 @@
 package websocket
 
 import (
-	"log"
 	"sync"
 )
 
 // WorkerPool 通过pool模式提高worker的吞吐率
 type WorkerPool struct {
-	// 选项
-	option workerPoolOption
+	// worker数量
+	workers int
 	// 任务channel
 	taskQueue chan Context
 	// 并发锁
@@ -22,20 +21,10 @@ type WorkerPool struct {
 }
 
 // newWorkerPool return instance of WorkerPool
-func newWorkerPool(opts ...Option) *WorkerPool {
-	// default option
-	option := workerPoolOption{
-		workers: 50,
-		tasks:   100000,
-	}
-	for _, opt := range opts {
-		opt.apply(&option)
-	}
-	log.Println("start worker pool:", option.tasks, option.workers)
-
+func newWorkerPool(workerNumber, taskNumber int) *WorkerPool {
 	return &WorkerPool{
-		option:    option,
-		taskQueue: make(chan Context, option.tasks),
+		workers: workerNumber,
+		taskQueue: make(chan Context, taskNumber),
 		done:      make(chan struct{}),
 		handler:   func(ctx Context) {}, // default handler
 	}
@@ -73,7 +62,7 @@ func (pool *WorkerPool) addTask(ctx Context) {
 // start 启动多协程
 func (pool *WorkerPool) start() {
 	// 通过协程去开启多个worker去处理connection
-	for i := 0; i < pool.option.workers; i++ {
+	for i := 0; i < pool.workers; i++ {
 		go pool.work()
 	}
 }

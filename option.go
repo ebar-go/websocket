@@ -1,6 +1,6 @@
 package websocket
 
-type workerPoolOption struct {
+type options struct {
 	// worker数量
 	workers int
 	// 最大任务数量,也就是预估最大连接数
@@ -9,14 +9,14 @@ type workerPoolOption struct {
 
 // Option server option interface
 type Option interface {
-	apply(opt *workerPoolOption)
+	apply(opt *options)
 }
 
 // workerNumberOption worker数量选项
 type workerNumberOption int
 
 // apply implements of Option
-func (o workerNumberOption) apply(opt *workerPoolOption) {
+func (o workerNumberOption) apply(opt *options) {
 	opt.workers = int(o)
 }
 
@@ -29,7 +29,7 @@ func WithWorkerNumber(n int) Option {
 type taskNumberOption int
 
 // apply implements of Option
-func (o taskNumberOption) apply(opt *workerPoolOption) {
+func (o taskNumberOption) apply(opt *options) {
 	opt.tasks = int(o)
 }
 

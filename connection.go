@@ -9,12 +9,10 @@
 package websocket
 
 import (
-	"encoding/json"
-	"fmt"
+	"github.com/ebar-go/websocket/context"
 	"github.com/ebar-go/websocket/utils"
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
-	"log"
 	"net/http"
 )
 
@@ -23,7 +21,7 @@ type Connection interface {
 	// 唯一标识
 	ID() string
 	// 给客户端发送数据
-	write(msg []byte) error
+	Write(msg []byte) error
 	// 关闭连接
 	close() error
 	// 获取上下文
@@ -40,8 +38,6 @@ type connection struct {
 	sockConn *websocket.Conn
 	// socket连接的文件标识符
 	sockFD int
-
-	closed bool
 }
 
 // ID implement of Connection
@@ -50,7 +46,7 @@ func (conn *connection) ID() string {
 }
 
 // write implement of Connection
-func (conn *connection) write(msg []byte) error {
+func (conn *connection) Write(msg []byte) error {
 	return conn.sockConn.WriteMessage(websocket.TextMessage, msg)
 }
 
@@ -61,23 +57,11 @@ func (conn *connection) close() error {
 
 // context implement of Connection
 func (conn *connection) context() (Context, error) {
-	if conn.closed {
-		return nil, fmt.Errorf("connection closed")
-	}
-	messageType, message, err := conn.sockConn.ReadMessage()
-	if err != nil {
+	ctx := context.NewContext(conn.sockConn)
+	if err := ctx.Read(); err != nil {
 		return nil, err
 	}
-	if messageType != websocket.TextMessage {
-		return nil, fmt.Errorf("connection closed")
-	}
-
-	var req Request
-	if err := json.Unmarshal(message, &req); err != nil {
-		// 参数错误
-		log.Printf("unmarshal request: %v, source: %s \n", err, string(message))
-	}
-	return NewContext(req, conn.sockConn), nil
+	return ctx, nil
 }
 
 // fd 获取文件标识符
@@ -88,27 +72,14 @@ func (conn *connection) fd() int {
 // newConnection return initialized websocket Connection
 func newConnection(w http.ResponseWriter, r *http.Request) (Connection, error) {
 	socketConn, err := utils.WebsocketConn(w, r)
-
 	if err != nil {
 		return nil, err
 	}
 
-	socketConn.SetPingHandler(func(appData string) error {
-		log.Println("ping", appData)
-		return nil
-	})
-	socketConn.SetPongHandler(func(appData string) error {
-		log.Println("pong", appData)
-		return nil
-	})
 	conn := &connection{
 		id:       uuid.NewV4().String(),
 		sockConn: socketConn,
 		sockFD:   utils.SocketFD(socketConn.UnderlyingConn()),
 	}
-	socketConn.SetCloseHandler(func(code int, text string) error {
-		conn.closed = true
-		return nil
-	})
 	return conn, nil
 }
