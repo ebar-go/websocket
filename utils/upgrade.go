@@ -14,5 +14,4 @@ func upGrader() websocket.Upgrader {
 func WebsocketConn(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
 	return u.Upgrade(w, r, nil)
 
-
 }

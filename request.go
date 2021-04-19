@@ -19,4 +19,3 @@ type Request struct {
 func (req Request) body() []byte {
 	return []byte(req.Body)
 }
-

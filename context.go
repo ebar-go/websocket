@@ -30,7 +30,6 @@ type Context interface {
 
 // 利用pool实例化context,减少GC
 type ContextPool struct {
-
 }
 
 func NewContext(req Request, conn *websocket.Conn) Context {
@@ -44,20 +43,24 @@ type context struct {
 	// 当前连接
 	connection *websocket.Conn
 }
+
 // RequestUri
 func (ctx *context) RequestUri() string {
 	return ctx.request.Uri
 }
+
 // BindJson implement of Context
 func (ctx *context) BindJson(obj interface{}) error {
 	return json.Unmarshal(ctx.request.body(), obj)
 }
+
 // Render implement of Context
 func (ctx *context) Render(response Response) {
 	if err := ctx.connection.WriteMessage(websocket.TextMessage, response.Byte()); err != nil {
 		log.Println("unable to write message:", err.Error())
 	}
 }
+
 // Success implement of Context
 func (ctx *context) Success(data interface{}) {
 	ctx.Render(Response{
@@ -74,6 +77,3 @@ func (ctx *context) Error(code int, message string) {
 		Data:    nil,
 	})
 }
-
-
-

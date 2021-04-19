@@ -31,4 +31,3 @@ func (r Response) Byte() []byte {
 	b, _ := json.Marshal(r)
 	return b
 }
-

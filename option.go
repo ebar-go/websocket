@@ -7,28 +7,33 @@ type workerPoolOption struct {
 	tasks int
 }
 
+// Option server option interface
 type Option interface {
 	apply(opt *workerPoolOption)
 }
 
+// workerNumberOption worker数量选项
 type workerNumberOption int
 
+// apply implements of Option
 func (o workerNumberOption) apply(opt *workerPoolOption) {
 	opt.workers = int(o)
 }
 
-// 设置worker数量
+// WithWorkerNumber 设置worker数量
 func WithWorkerNumber(n int) Option {
 	return workerNumberOption(n)
 }
 
+// taskNumberOption task数量选项
 type taskNumberOption int
 
+// apply implements of Option
 func (o taskNumberOption) apply(opt *workerPoolOption) {
 	opt.tasks = int(o)
 }
 
-// 设置task数量
+// WithTaskNumber 设置task数量
 func WithTaskNumber(n int) Option {
 	return taskNumberOption(n)
 }

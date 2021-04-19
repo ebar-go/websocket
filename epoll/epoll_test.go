@@ -1,11 +1,16 @@
 package epoll
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestMap(t *testing.T)  {
-	s := make([]int, 4)
-	fmt.Println(s, len(s), cap(s))
+func TestCreate(t *testing.T) {
+	epoll, err := Create()
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, epoll.fd)
+}
+
+func TestEpollImpl_Add(t *testing.T) {
+
 }

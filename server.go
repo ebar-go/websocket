@@ -16,7 +16,6 @@ import (
 	"net/http"
 )
 
-
 // server
 type server struct {
 	// socket连接,通过concurrent map,保证并发安全，同时提高性能
@@ -77,6 +76,7 @@ func (srv *server) HandleConnect(callback Callback) {
 func (srv *server) HandleDisconnect(callback Callback) {
 	srv.disconnectCallback = callback
 }
+
 // Route 绑定路由
 func (srv *server) Route(uri string, handler Handler) {
 	srv.engine.route(uri, handler)
@@ -86,6 +86,7 @@ func (srv *server) Route(uri string, handler Handler) {
 func (srv *server) key(fd int) string {
 	return fmt.Sprintf("idx:%d", fd)
 }
+
 // registerConn add connection to map
 func (srv *server) registerConn(conn Connection) {
 	srv.connections.Set(srv.key(conn.fd()), conn)
@@ -116,7 +117,6 @@ func (srv *server) getConnection(fd int) (Connection, bool) {
 	}
 	return v.(Connection), true
 }
-
 
 // Broadcast implement of Server
 func (srv *server) Broadcast(response Response, ignores ...string) {
@@ -150,14 +150,13 @@ func (srv *server) Broadcast(response Response, ignores ...string) {
 func (srv *server) Start() {
 	log.Println("websocket serving..")
 	// 给workers指定job
-	srv.workers.handler = func(ctx Context) {
+	srv.workers.setHandler(func(ctx Context) {
 		// 通过文件标识符，获取到socket连接
 		srv.engine.handle(ctx)
-	}
+	})
 
 	// 开始工作
 	srv.workers.start()
-
 
 	go func() {
 		// 线程结束时，停止工作
@@ -172,7 +171,7 @@ func (srv *server) Start() {
 
 			// 将连接分配给worker
 			for _, fd := range fds {
-				conn , exist := srv.getConnection(fd)
+				conn, exist := srv.getConnection(fd)
 				if !exist {
 					continue
 				}

@@ -33,8 +33,6 @@ type Server interface {
 	Start()
 }
 
-
-
 // NewServer 多进程server，相比epoll的单进程，降低了延迟
 func NewServer(opts ...Option) Server {
 	e, err := epoll.Create()
@@ -42,9 +40,9 @@ func NewServer(opts ...Option) Server {
 		log.Fatalf("create epoll:%v\n", err)
 	}
 	return &server{
-		engine: newEngine(),
+		engine:      newEngine(),
 		connections: cmap.New(),
-		epoller: e ,
-		workers: newWorkerPool(opts...),
+		epoller:     e,
+		workers:     newWorkerPool(opts...),
 	}
 }

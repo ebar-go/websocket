@@ -51,14 +51,14 @@ func (impl *epollImpl) Wait() ([]int, error) {
 	return fds, nil
 }
 
-func Create() (Epoll, error) {
+func Create() (*epollImpl, error) {
 	fd, err := unix.EpollCreate(1)
 	if err != nil {
 		return nil, err
 	}
 
 	return &epollImpl{
-		fd:          fd,
+		fd:           fd,
 		maxEventSize: 100,
 	}, nil
 }

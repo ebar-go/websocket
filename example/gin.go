@@ -18,9 +18,9 @@ func main() {
 	// 实例化web服务
 	router := gin.Default()
 	ws := websocket.NewServer(
-		websocket.WithWorkerNumber(20),  // 设置worker数量，可选，默认为50
+		websocket.WithWorkerNumber(20), // 设置worker数量，可选，默认为50
 		websocket.WithTaskNumber(1000), // 设置task数量，可选，默认为100000
-		) // 基于workerPool实现的epollServer
+	) // 基于workerPool实现的epollServer
 	// 用于创建websocket连接
 	router.GET("/ws", func(ctx *gin.Context) {
 		ws.HandleRequest(ctx.Writer, ctx.Request)

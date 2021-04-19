@@ -43,17 +43,19 @@ type connection struct {
 
 	closed bool
 }
+
 // ID implement of Connection
 func (conn *connection) ID() string {
 	return conn.id
 }
 
 // write implement of Connection
-func (conn *connection) write(msg []byte) error{
+func (conn *connection) write(msg []byte) error {
 	return conn.sockConn.WriteMessage(websocket.TextMessage, msg)
 }
+
 // close implement of Connection
-func (conn *connection) close() error{
+func (conn *connection) close() error {
 	return conn.sockConn.Close()
 }
 
@@ -82,10 +84,10 @@ func (conn *connection) context() (Context, error) {
 func (conn *connection) fd() int {
 	return conn.sockFD
 }
+
 // newConnection return initialized websocket Connection
 func newConnection(w http.ResponseWriter, r *http.Request) (Connection, error) {
 	socketConn, err := utils.WebsocketConn(w, r)
-
 
 	if err != nil {
 		return nil, err
@@ -100,9 +102,9 @@ func newConnection(w http.ResponseWriter, r *http.Request) (Connection, error) {
 		return nil
 	})
 	conn := &connection{
-		id:   uuid.NewV4().String(),
+		id:       uuid.NewV4().String(),
 		sockConn: socketConn,
-		sockFD: utils.SocketFD(socketConn.UnderlyingConn()),
+		sockFD:   utils.SocketFD(socketConn.UnderlyingConn()),
 	}
 	socketConn.SetCloseHandler(func(code int, text string) error {
 		conn.closed = true

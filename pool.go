@@ -5,8 +5,7 @@ import (
 	"sync"
 )
 
-
-// workerPool 通过pool模式提高worker的吞吐率
+// WorkerPool 通过pool模式提高worker的吞吐率
 type WorkerPool struct {
 	// 选项
 	option workerPoolOption
@@ -22,6 +21,7 @@ type WorkerPool struct {
 	done chan struct{}
 }
 
+// newWorkerPool return instance of WorkerPool
 func newWorkerPool(opts ...Option) *WorkerPool {
 	// default option
 	option := workerPoolOption{
@@ -34,13 +34,18 @@ func newWorkerPool(opts ...Option) *WorkerPool {
 	log.Println("start worker pool:", option.tasks, option.workers)
 
 	return &WorkerPool{
-		option: option,
+		option:    option,
 		taskQueue: make(chan Context, option.tasks),
 		done:      make(chan struct{}),
-		handler: func(ctx Context) {
-
-		},
+		handler:   func(ctx Context) {}, // default handler
 	}
+}
+
+func (pool *WorkerPool) setHandler(handler func(ctx Context)) {
+	if handler == nil {
+		return
+	}
+	pool.handler = handler
 }
 
 // stop 停止所有协程的工作
@@ -72,13 +77,14 @@ func (pool *WorkerPool) start() {
 		go pool.work()
 	}
 }
+
 // work 工作
 func (pool *WorkerPool) work() {
 	for {
 		select {
 		case <-pool.done: // 当workerPool.Close()后，关闭所有的worker
 			return
-		case ctx := <- pool.taskQueue: // 有新的connection进来后，分配给worker处理
+		case ctx := <-pool.taskQueue: // 有新的connection进来后，分配给worker处理
 			pool.handler(ctx)
 		}
 	}
