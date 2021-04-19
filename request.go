@@ -10,7 +10,9 @@ package websocket
 
 // request 自定义Request
 type Request struct {
+	// 请求资源
 	Uri string `json:"uri"`
+	// 请求内容,json字符串
 	Body string `json:"body"`
 }
 

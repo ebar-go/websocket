@@ -35,7 +35,7 @@ type server struct {
 	epoller epoll.Epoll
 
 	// worker pool
-	workers *workerPool
+	workers *WorkerPool
 }
 
 // HandleRequest 处理websocket请求，主要是注册socket连接
@@ -150,18 +150,8 @@ func (srv *server) Broadcast(response Response, ignores ...string) {
 func (srv *server) Start() {
 	log.Println("websocket serving..")
 	// 给workers指定job
-	srv.workers.job = func(fd int) {
+	srv.workers.handler = func(ctx Context) {
 		// 通过文件标识符，获取到socket连接
-		conn , exist := srv.getConnection(fd)
-		if !exist {
-			return
-		}
-
-		ctx, err := conn.context()
-		if err != nil {
-			//srv.Close(conn)
-			return
-		}
 		srv.engine.handle(ctx)
 	}
 
@@ -182,7 +172,17 @@ func (srv *server) Start() {
 
 			// 将连接分配给worker
 			for _, fd := range fds {
-				srv.workers.addTask(fd)
+				conn , exist := srv.getConnection(fd)
+				if !exist {
+					continue
+				}
+
+				ctx, err := conn.context()
+				if err != nil {
+					srv.Close(conn)
+					continue
+				}
+				srv.workers.addTask(ctx)
 			}
 		}
 
