@@ -21,8 +21,6 @@ import (
 
 func main() {
 	router := gin.Default()
-	//ws := websocket.SampleServer() // 基于goroutine-per-conn实现的server
-	//ws := websocket.EpollServer() // 基于epoll实现的server
 	ws := websocket.NewServer(
 		websocket.WithWorkerNumber(1),  // 设置worker数量，可选，默认为50
 		websocket.WithTaskNumber(2), // 设置task数量，可选，默认为100000
