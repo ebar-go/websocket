@@ -1,7 +1,7 @@
 # websocket
 - 基于Epoll和WorkerPool实现的高性能websocket框架。 
 - 提供路由模式，让开发者像开发http接口一样方便的去开发websocket应用。
-
+- 支持创建连接与断开连接的回调事件。
 
 ## 安装
 ```
@@ -21,10 +21,11 @@ import (
 
 func main() {
 	router := gin.Default()
+	// 基于workerPool实现的epoll Server
 	ws := websocket.NewServer(
 		websocket.WithWorkerNumber(1),  // 设置worker数量，可选，默认为50
 		websocket.WithTaskNumber(2), // 设置task数量，可选，默认为100000
-	) // 基于workerPool实现的epollServer
+	) 
 	// 用于创建websocket连接
 	router.GET("/ws", func(ctx *gin.Context) {
 		ws.HandleRequest(ctx.Writer, ctx.Request)
