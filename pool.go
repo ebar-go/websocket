@@ -14,8 +14,6 @@ type WorkerPool struct {
 	mu sync.Mutex
 	// 是否关闭
 	closed bool
-	// 处理器，也就是回调
-	handler func(ctx Context)
 	// 关闭channel
 	done chan struct{}
 }
@@ -26,15 +24,7 @@ func newWorkerPool(workerNumber, taskNumber int) *WorkerPool {
 		workers: workerNumber,
 		taskQueue: make(chan Context, taskNumber),
 		done:      make(chan struct{}),
-		handler:   func(ctx Context) {}, // default handler
 	}
-}
-
-func (pool *WorkerPool) setHandler(handler func(ctx Context)) {
-	if handler == nil {
-		return
-	}
-	pool.handler = handler
 }
 
 // stop 停止所有协程的工作
@@ -60,21 +50,21 @@ func (pool *WorkerPool) addTask(ctx Context) {
 }
 
 // start 启动多协程
-func (pool *WorkerPool) start() {
+func (pool *WorkerPool) schedule(fn func(ctx Context)) {
 	// 通过协程去开启多个worker去处理connection
 	for i := 0; i < pool.workers; i++ {
-		go pool.work()
+		go pool.work(fn)
 	}
 }
 
 // work 工作
-func (pool *WorkerPool) work() {
+func (pool *WorkerPool) work(fn func(ctx Context)) {
 	for {
 		select {
 		case <-pool.done: // 当workerPool.Close()后，关闭所有的worker
 			return
 		case ctx := <-pool.taskQueue: // 有新的connection进来后，分配给worker处理
-			pool.handler(ctx)
+			fn(ctx)
 		}
 	}
 }

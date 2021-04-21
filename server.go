@@ -154,14 +154,8 @@ func (srv *workerPoolServerImpl) Broadcast(response context.Response, ignores ..
 // Start
 func (srv *workerPoolServerImpl) Start() {
 	log.Println("websocket serving..")
-	// 给workers指定job
-	srv.workers.setHandler(func(ctx Context) {
-		// 通过文件标识符，获取到socket连接
-		srv.engine.handle(ctx)
-	})
-
-	// 开始工作
-	srv.workers.start()
+	// 分配任务
+	srv.workers.schedule(srv.engine.handle)
 
 	go func() {
 		// 线程结束时，停止工作
