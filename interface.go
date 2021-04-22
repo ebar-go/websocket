@@ -53,7 +53,7 @@ type Data map[string]interface{}
 func NewServer(opts ...Option) Server {
 	e, err := epoll.Create()
 	if err != nil {
-		log.Fatalf("create epoll:%v\n", err)
+		log.Fatalf("unable to create epoll:%v\n", err)
 	}
 
 	// default option
