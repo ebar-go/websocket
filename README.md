@@ -1,11 +1,11 @@
 # websocket
 - 基于Epoll和WorkerPool实现的高性能websocket框架。 
-- 提供路由模式，让开发者像开发http接口一样方便的去开发websocket应用。
+- 提供路由树模式，让开发者像开发http接口一样方便的去开发websocket应用。
 - 支持创建连接与断开连接的回调事件。
 
 ## 安装
 ```
-go get github.com/ebar-go/ego
+go get github.com/ebar-go/websocket
 ```
 
 ## Demo
@@ -30,8 +30,20 @@ func main() {
 	ws.HandleDisconnect(func(conn websocket.Connection) {
 		log.Printf("goodbye: %s\n", conn.ID())
 	})
-	// 路由以及handler
-	ws.Route("/index", func(ctx websocket.Context) {
+	// 支持路由分组
+	userGroup := ws.Group("user")
+	{
+		// 请求uri为: /user/list
+		userGroup.Route("list", func(ctx websocket.Context) {
+			ctx.Success("this is user list api")
+		})
+		// 请求的uri为/user/create
+		userGroup.Route("create", func(ctx websocket.Context) {
+			ctx.Success("this is user create api")
+		})
+	}
+	// 路由以及handler,请求uri为: /index
+	ws.Route("index", func(ctx websocket.Context) {
 		req := struct {
 			Name string `json:"name"`
 		}{}

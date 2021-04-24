@@ -22,18 +22,21 @@ func main() {
 		log.Printf("goodbye: %s\n", conn.ID())
 	})
 
+	// 路由分组
 	userGroup := ws.Group("user")
 	{
+		// 请求uri为: /user/list
 		userGroup.Route("list", func(ctx websocket.Context) {
 			ctx.Success("this is user list api")
 		})
+		// 请求的uri为/user/create
 		userGroup.Route("create", func(ctx websocket.Context) {
 			ctx.Success("this is user create api")
 		})
 	}
 
 
-	// 路由以及handler
+	// 请求uri为: /index
 	ws.Route("index", func(ctx websocket.Context) {
 		req := struct {
 			Name string `json:"name"`
