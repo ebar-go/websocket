@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"github.com/ebar-go/websocket/router"
+	"github.com/ebar-go/websocket/tree"
 	"path"
 )
 
@@ -9,7 +9,7 @@ type Router struct {
 	// 前缀
 	prefix string
 	// 路由树
-	tree *router.RadixTree
+	tree *tree.RadixTree
 }
 
 func (router *Router) print() {
@@ -50,6 +50,6 @@ func (router *Router) Get(path string) (Handler, bool){
 func NewRouter() *Router {
 	return &Router{
 		prefix: "/",
-		tree:   router.NewRadixTree(),
+		tree:   tree.NewRadixTree(),
 	}
 }
