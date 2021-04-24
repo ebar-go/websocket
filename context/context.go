@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
+	"math"
 )
+
+const abortIndex = math.MaxInt8 / 2
 
 // Context 上下文
 type Context struct {
@@ -12,6 +15,9 @@ type Context struct {
 	conn *websocket.Conn
 	// request 请求
 	request Request
+	// handler index
+	index uint8
+	handlers []func()
 }
 
 // GetHeader 获取header信息
@@ -87,9 +93,17 @@ func (ctx *Context) Read() error {
 
 // Next 继续执行
 func (ctx *Context) Next() {
+	ctx.index++
+	for ctx.index<uint8(len(ctx.handlers)) {
+		ctx.handlers[ctx.index]()
+		ctx.index++
+	}
+}
 
+func (ctx *Context) isAborted() bool{
+	return ctx.index >= abortIndex
 }
 // Abort 中断
 func (ctx *Context) Abort() {
-
+	ctx.index = abortIndex
 }

@@ -87,6 +87,10 @@ func (srv *workerPoolServerImpl) Route(uri string, handler Handler) {
 	srv.engine.route(uri, handler)
 }
 
+func (srv *workerPoolServerImpl) Group(uri string) *Router {
+	return srv.engine.router.Group(uri)
+}
+
 // unique key
 func (srv *workerPoolServerImpl) key(fd int) string {
 	return fmt.Sprintf("idx:%d", fd)
@@ -153,6 +157,7 @@ func (srv *workerPoolServerImpl) Broadcast(response context.Response, ignores ..
 
 // Start
 func (srv *workerPoolServerImpl) Start() {
+	srv.engine.router.print()
 	log.Println("websocket serving..")
 	// 分配任务
 	srv.workers.schedule(srv.engine.handle)

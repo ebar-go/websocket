@@ -47,7 +47,7 @@ func main() {
 	})
 
 	// 路由以及handler
-	ws.Route("/index", func(ctx websocket.Context) {
+	ws.Route("index", func(ctx websocket.Context) {
 		req := struct {
 			Name string `json:"name"`
 		}{}

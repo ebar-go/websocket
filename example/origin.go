@@ -22,8 +22,19 @@ func main() {
 		log.Printf("goodbye: %s\n", conn.ID())
 	})
 
+	userGroup := ws.Group("user")
+	{
+		userGroup.Route("list", func(ctx websocket.Context) {
+			ctx.Success("this is user list api")
+		})
+		userGroup.Route("create", func(ctx websocket.Context) {
+			ctx.Success("this is user create api")
+		})
+	}
+
+
 	// 路由以及handler
-	ws.Route("/index", func(ctx websocket.Context) {
+	ws.Route("index", func(ctx websocket.Context) {
 		req := struct {
 			Name string `json:"name"`
 		}{}

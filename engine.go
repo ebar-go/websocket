@@ -9,14 +9,13 @@
 package websocket
 
 import (
-	cmap "github.com/orcaman/concurrent-map"
 	"net/http"
 )
 
 // Engine 路由引擎
 type Engine struct {
 	// 路由映射,未来考虑升级为支持restful模式
-	routers cmap.ConcurrentMap
+	router *Router
 	// 404
 	notFound Handler
 }
@@ -26,20 +25,20 @@ type Handler func(ctx Context)
 
 // route 设置路由映射
 func (engine *Engine) route(uri string, handler Handler) {
-	engine.routers.Set(uri, handler)
+	engine.router.Route(uri, handler)
 }
 
 // Handle 执行路由
 func (engine *Engine) handle(ctx Context) {
 	// 获取路由映射的handler
-	handler, exist := engine.routers.Get(ctx.RequestUri())
+	handler, exist := engine.router.Get(ctx.RequestUri())
 	if !exist {
 		// 404
 		engine.notFound(ctx)
 		return
 	}
 
-	handler.(Handler)(ctx)
+	handler(ctx)
 }
 
 // NoRoute 设置404处理器
@@ -56,6 +55,6 @@ func newEngine() *Engine {
 		notFound: func(ctx Context) {
 			ctx.Error(http.StatusNotFound, "404 not found")
 		},
-		routers: cmap.New(),
+		router: NewRouter(),
 	}
 }

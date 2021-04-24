@@ -32,6 +32,8 @@ type Server interface {
 	Broadcast(response context.Response, ignores ...string)
 	// 启动服务
 	Start()
+
+	Group(uri string) *Router
 }
 
 
