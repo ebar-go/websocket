@@ -2,9 +2,12 @@ package context
 
 import "encoding/json"
 
+// Request
 type Request struct {
 	// 请求资源
 	Uri string `json:"uri"`
+	// 请求头，用于存放如token此类的数据
+	Header map[string]string `json:"header"`
 	// 请求内容,json字符串
 	Body interface{} `json:"body"`
 }

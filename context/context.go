@@ -6,11 +6,22 @@ import (
 	"log"
 )
 
+// Context 上下文
 type Context struct {
+	// conn 连接
 	conn *websocket.Conn
+	// request 请求
 	request Request
 }
 
+// GetHeader 获取header信息
+func (ctx *Context) GetHeader(key string) string {
+	if ctx.request.Header == nil {
+		return ""
+	}
+
+	return ctx.request.Header[key]
+}
 
 // RequestUri
 func (ctx *Context) RequestUri() string {
@@ -33,11 +44,12 @@ func (ctx *Context) Success(data interface{}) {
 	ctx.write(0, "success", data)
 }
 
-
+// Error 错误信息
 func (ctx *Context) Error(code int, message string) {
 	ctx.write(code, message, nil)
 }
 
+// write 发送信息到客户端
 func (ctx *Context) write(code int, message string, data interface{}) {
 	p := Response{
 		Code:    code,
@@ -51,12 +63,14 @@ func (ctx *Context) write(code int, message string, data interface{}) {
 	}
 }
 
+// NewContext 获取context的实例
 func NewContext(conn *websocket.Conn) *Context {
 	return &Context{
 		conn: conn,
 	}
 }
 
+// Read 读取socket信息
 func (ctx *Context) Read() error {
 	_, message, err := ctx.conn.ReadMessage()
 	if err != nil {
@@ -69,4 +83,13 @@ func (ctx *Context) Read() error {
 	}
 	ctx.request = req
 	return nil
+}
+
+// Next 继续执行
+func (ctx *Context) Next() {
+
+}
+// Abort 中断
+func (ctx *Context) Abort() {
+
 }

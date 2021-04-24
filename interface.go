@@ -37,6 +37,8 @@ type Server interface {
 
 // Context 上下文
 type Context interface {
+	// 获取header信息
+	GetHeader(key string) string
 	// 获取请求资源
 	RequestUri() string
 	// 通过json解析body
