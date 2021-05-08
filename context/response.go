@@ -2,7 +2,6 @@ package context
 
 import "encoding/json"
 
-
 // Response 自定义响应内容
 type Response struct {
 	// 状态码,0为成功

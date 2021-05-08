@@ -20,8 +20,8 @@ import (
 // Callback 回调
 type Callback func(conn Connection)
 
-// WorkerPoolServer 基于worker pool实现的websocket server
-type WorkerPoolServer struct {
+// Server 基于worker pool实现的websocket server
+type Server struct {
 	// socket连接,通过concurrent map,保证并发安全，同时提高性能
 	connections cmap.ConcurrentMap
 
@@ -42,7 +42,7 @@ type WorkerPoolServer struct {
 }
 
 // HandleRequest 处理websocket请求，主要是注册socket连接
-func (srv *WorkerPoolServer) HandleRequest(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	// 获取socket连接
 	conn, err := newConnection(w, r)
 	if err != nil {
@@ -65,34 +65,33 @@ func (srv *WorkerPoolServer) HandleRequest(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-
 // HandleConnect 建立连接时的回调
-func (srv *WorkerPoolServer) HandleConnect(callback Callback) {
+func (srv *Server) HandleConnect(callback Callback) {
 	srv.connectCallback = callback
 }
 
 // HandleDisconnect 断开连接时的回调
-func (srv *WorkerPoolServer) HandleDisconnect(callback Callback) {
+func (srv *Server) HandleDisconnect(callback Callback) {
 	srv.disconnectCallback = callback
 }
 
 // Route 绑定路由
-func (srv *WorkerPoolServer) Route(uri string, handler Handler) {
+func (srv *Server) Route(uri string, handler Handler) {
 	srv.engine.router.Route(uri, handler)
 }
 
 // Group 生成路由分组
-func (srv *WorkerPoolServer) Group(uri string) Router {
+func (srv *Server) Group(uri string) Router {
 	return srv.engine.router.Group(uri)
 }
 
 // key 获取下标
-func (srv *WorkerPoolServer) key(fd int) string {
+func (srv *Server) key(fd int) string {
 	return fmt.Sprintf("idx:%d", fd)
 }
 
 // getConnection 通过文件标识符获取连接
-func (srv *WorkerPoolServer) getConnection(fd int) (Connection, bool) {
+func (srv *Server) getConnection(fd int) (Connection, bool) {
 	v, exist := srv.connections.Get(srv.key(fd))
 	if !exist {
 		return nil, false
@@ -101,7 +100,7 @@ func (srv *WorkerPoolServer) getConnection(fd int) (Connection, bool) {
 }
 
 // Broadcast 广播
-func (srv *WorkerPoolServer) Broadcast(response context.Response, ignores ...string) {
+func (srv *Server) Broadcast(response context.Response, ignores ...string) {
 	if len(ignores) == 0 {
 		// not ignore
 		srv.connections.IterCb(func(key string, v interface{}) {
@@ -129,7 +128,7 @@ func (srv *WorkerPoolServer) Broadcast(response context.Response, ignores ...str
 }
 
 // Close 主动断开连接
-func (srv *WorkerPoolServer) Close(conn Connection) {
+func (srv *Server) Close(conn Connection) {
 	// remove socket in epoll model
 	if err := srv.epoller.Remove(conn.fd()); err != nil {
 		log.Println("unable to remove conn:", err.Error())
@@ -150,7 +149,7 @@ func (srv *WorkerPoolServer) Close(conn Connection) {
 }
 
 // Start 开始运行
-func (srv *WorkerPoolServer) Start() {
+func (srv *Server) Start() {
 	log.Println("websocket serving..")
 	// 分配任务
 	srv.workers.schedule(srv.engine.handle)

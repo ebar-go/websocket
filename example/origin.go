@@ -35,7 +35,6 @@ func main() {
 		})
 	}
 
-
 	// 请求uri为: /index
 	ws.Route("index", func(ctx websocket.Context) {
 		req := struct {

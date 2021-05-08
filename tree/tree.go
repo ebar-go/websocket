@@ -1,9 +1,11 @@
 package tree
+
 import (
 	"fmt"
 	"strings"
 	"sync"
 )
+
 // RadixTree 空间优化前缀树
 type RadixTree struct {
 	// 锁
@@ -11,7 +13,7 @@ type RadixTree struct {
 	// 子节点
 	children map[string]*RadixTree
 	// 是否为字符
-	isWord   bool
+	isWord bool
 	// 值
 	val interface{}
 }
@@ -72,7 +74,7 @@ func (rt *RadixTree) insert(word string, val interface{}, children map[string]*R
 		// 如果插入字符串和前缀一致，则标记新节点为字符串节点
 		if word == samePrefix {
 			node.isWord = true
-		}else { // 只是部分相同，则插入剩余部分
+		} else { // 只是部分相同，则插入剩余部分
 			node.Insert(word[idx:], val)
 		}
 		// 绑定新的子节点
@@ -119,7 +121,7 @@ func (rt *RadixTree) Print(prefix string) {
 	for s, child := range rt.children {
 		if child.isWord {
 			fmt.Println(prefix+s, child.val)
-		}else {
+		} else {
 			child.Print(s)
 		}
 

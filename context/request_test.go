@@ -12,5 +12,4 @@ func TestNewRequest(t *testing.T) {
 	assert.Nil(t, err)
 	fmt.Println(req)
 
-
 }

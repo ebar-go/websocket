@@ -1,14 +1,9 @@
-/**
- * @Author: Hongker
- * @Description:
- * @File:  engine
- * @Version: 1.0.0
- * @Date: 2021/3/23 20:07
- */
+// 实现路由管理
 
 package websocket
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -44,12 +39,15 @@ func (engine *Engine) NoRoute(handler Handler) {
 	engine.notFound = handler
 }
 
+// notFoundHandler 默认的404处理器
+func notFoundHandler(ctx Context) {
+	ctx.Error(http.StatusNotFound, fmt.Sprintf("%s not found", ctx.RequestUri()))
+}
+
 // newEngine 实例
 func newEngine() *Engine {
 	return &Engine{
-		notFound: func(ctx Context) {
-			ctx.Error(http.StatusNotFound, "404 not found")
-		},
-		router: newRootRouter(),
+		notFound: notFoundHandler,
+		router:   newRootRouter(),
 	}
 }

@@ -28,7 +28,7 @@ func (router *radixRouter) print() {
 }
 
 // withPrefix 拼接前缀，获取到的是完整url地址
-func (router *radixRouter) withPrefix(uri string) string{
+func (router *radixRouter) withPrefix(uri string) string {
 	return path.Join(router.prefix, uri)
 }
 
@@ -43,13 +43,14 @@ func (router *radixRouter) Group(path string) Router {
 func (router *radixRouter) Use() {
 	// TODO
 }
+
 // Route 路由匹配
-func (router *radixRouter) Route(path string, handler Handler)  {
+func (router *radixRouter) Route(path string, handler Handler) {
 	router.tree.Insert(router.withPrefix(path), handler)
 }
 
 // Get 获取handler
-func (router *radixRouter) Get(path string) (Handler, bool){
+func (router *radixRouter) Get(path string) (Handler, bool) {
 	val := router.tree.GetValue(path)
 	if val == nil {
 		return nil, false

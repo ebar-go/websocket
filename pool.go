@@ -21,7 +21,7 @@ type WorkerPool struct {
 // newWorkerPool return instance of WorkerPool
 func newWorkerPool(workerNumber, taskNumber int) *WorkerPool {
 	return &WorkerPool{
-		workers: workerNumber,
+		workers:   workerNumber,
 		taskQueue: make(chan Context, taskNumber),
 		done:      make(chan struct{}),
 	}

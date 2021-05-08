@@ -15,7 +15,7 @@ type Context struct {
 	// request 请求
 	request Request
 	// handler index
-	index uint8
+	index    uint8
 	handlers []func()
 }
 
@@ -73,7 +73,7 @@ func NewContext(conn *websocket.Conn) *Context {
 func (ctx *Context) Read() error {
 	_, message, err := ctx.conn.ReadMessage()
 	if err != nil {
-		return  err
+		return err
 	}
 
 	req, err := newRequest(message)
@@ -87,15 +87,16 @@ func (ctx *Context) Read() error {
 // Next 继续执行
 func (ctx *Context) Next() {
 	ctx.index++
-	for ctx.index<uint8(len(ctx.handlers)) {
+	for ctx.index < uint8(len(ctx.handlers)) {
 		ctx.handlers[ctx.index]()
 		ctx.index++
 	}
 }
 
-func (ctx *Context) isAborted() bool{
+func (ctx *Context) isAborted() bool {
 	return ctx.index >= abortIndex
 }
+
 // Abort 中断
 func (ctx *Context) Abort() {
 	ctx.index = abortIndex

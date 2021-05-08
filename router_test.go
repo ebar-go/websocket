@@ -11,7 +11,7 @@ func TestNewRouter(t *testing.T) {
 	user := router.Group("user")
 	{
 		user.Route("list", func(ctx Context) {
-			
+
 		})
 		user.Route("create", nil)
 		user.Route("update", nil)
