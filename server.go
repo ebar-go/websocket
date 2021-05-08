@@ -21,8 +21,8 @@ import (
 // Callback 回调
 type Callback func(conn Connection)
 
-// workerPoolServerImpl 基于worker pool实现的websocket server
-type workerPoolServerImpl struct {
+// WorkerPoolServer 基于worker pool实现的websocket server
+type WorkerPoolServer struct {
 	// socket连接,通过concurrent map,保证并发安全，同时提高性能
 	connections cmap.ConcurrentMap
 
@@ -43,7 +43,7 @@ type workerPoolServerImpl struct {
 }
 
 // HandleRequest 处理websocket请求，主要是注册socket连接
-func (srv *workerPoolServerImpl) HandleRequest(w http.ResponseWriter, r *http.Request) {
+func (srv *WorkerPoolServer) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	// 获取socket连接
 	conn, err := newConnection(w, r)
 	if err != nil {
@@ -63,7 +63,7 @@ func (srv *workerPoolServerImpl) HandleRequest(w http.ResponseWriter, r *http.Re
 }
 
 // Close connection
-func (srv *workerPoolServerImpl) Close(conn Connection) {
+func (srv *WorkerPoolServer) Close(conn Connection) {
 	// remove socket in epoll model
 	if err := srv.epoller.Remove(conn.fd()); err != nil {
 		log.Println("unable to remove conn:", err.Error())
@@ -73,31 +73,31 @@ func (srv *workerPoolServerImpl) Close(conn Connection) {
 }
 
 // HandleConnect 建立连接时的回调
-func (srv *workerPoolServerImpl) HandleConnect(callback Callback) {
+func (srv *WorkerPoolServer) HandleConnect(callback Callback) {
 	srv.connectCallback = callback
 }
 
 // HandleDisconnect 断开连接时的回调
-func (srv *workerPoolServerImpl) HandleDisconnect(callback Callback) {
+func (srv *WorkerPoolServer) HandleDisconnect(callback Callback) {
 	srv.disconnectCallback = callback
 }
 
 // Route 绑定路由
-func (srv *workerPoolServerImpl) Route(uri string, handler Handler) {
-	srv.engine.route(uri, handler)
+func (srv *WorkerPoolServer) Route(uri string, handler Handler) {
+	srv.engine.Route(uri, handler)
 }
 
-func (srv *workerPoolServerImpl) Group(uri string) *Router {
-	return srv.engine.router.Group(uri)
+func (srv *WorkerPoolServer) Group(uri string) Router {
+	return srv.engine.Group(uri)
 }
 
 // unique key
-func (srv *workerPoolServerImpl) key(fd int) string {
+func (srv *WorkerPoolServer) key(fd int) string {
 	return fmt.Sprintf("idx:%d", fd)
 }
 
 // registerConn add connection to map
-func (srv *workerPoolServerImpl) registerConn(conn Connection) {
+func (srv *WorkerPoolServer) registerConn(conn Connection) {
 	srv.connections.Set(srv.key(conn.fd()), conn)
 	// 注册回调
 	if srv.connectCallback != nil {
@@ -106,7 +106,7 @@ func (srv *workerPoolServerImpl) registerConn(conn Connection) {
 }
 
 // unregisterConn remove and close connection
-func (srv *workerPoolServerImpl) unregisterConn(conn Connection) {
+func (srv *WorkerPoolServer) unregisterConn(conn Connection) {
 	// 关闭socket
 	defer conn.close()
 
@@ -119,7 +119,7 @@ func (srv *workerPoolServerImpl) unregisterConn(conn Connection) {
 }
 
 // 通过文件标识符获取连接
-func (srv *workerPoolServerImpl) getConnection(fd int) (Connection, bool) {
+func (srv *WorkerPoolServer) getConnection(fd int) (Connection, bool) {
 	v, exist := srv.connections.Get(srv.key(fd))
 	if !exist {
 		return nil, false
@@ -128,7 +128,7 @@ func (srv *workerPoolServerImpl) getConnection(fd int) (Connection, bool) {
 }
 
 // Broadcast implement of Server
-func (srv *workerPoolServerImpl) Broadcast(response context.Response, ignores ...string) {
+func (srv *WorkerPoolServer) Broadcast(response context.Response, ignores ...string) {
 	if len(ignores) == 0 {
 		// not ignore
 		srv.connections.IterCb(func(key string, v interface{}) {
@@ -156,8 +156,7 @@ func (srv *workerPoolServerImpl) Broadcast(response context.Response, ignores ..
 }
 
 // Start
-func (srv *workerPoolServerImpl) Start() {
-	srv.engine.router.print()
+func (srv *WorkerPoolServer) Start() {
 	log.Println("websocket serving..")
 	// 分配任务
 	srv.workers.schedule(srv.engine.handle)

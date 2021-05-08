@@ -15,7 +15,7 @@ import (
 // Engine 路由引擎
 type Engine struct {
 	// 路由映射,未来考虑升级为支持restful模式
-	router *Router
+	Router
 	// 404
 	notFound Handler
 }
@@ -23,15 +23,10 @@ type Engine struct {
 // Handler handle connection request
 type Handler func(ctx Context)
 
-// route 设置路由映射
-func (engine *Engine) route(uri string, handler Handler) {
-	engine.router.Route(uri, handler)
-}
-
 // Handle 执行路由
 func (engine *Engine) handle(ctx Context) {
 	// 获取路由映射的handler
-	handler, exist := engine.router.Get(ctx.RequestUri())
+	handler, exist := engine.Get(ctx.RequestUri())
 	if !exist {
 		// 404
 		engine.notFound(ctx)
@@ -55,6 +50,6 @@ func newEngine() *Engine {
 		notFound: func(ctx Context) {
 			ctx.Error(http.StatusNotFound, "404 not found")
 		},
-		router: NewRouter(),
+		Router: NewRouter(),
 	}
 }

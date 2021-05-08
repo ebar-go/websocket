@@ -7,15 +7,15 @@ import (
 
 // Epoll model
 type Epoll interface {
-	// add fd
+	// Add register socket connection fd
 	Add(fd int) error
-	// remove fd
+	// Remove remove socket connection fd
 	Remove(fd int) error
-	// wait active fd
+	// Wait get active socket connection fd
 	Wait() ([]int, error)
 }
 
-// epollImpl is implement of Epoll
+// epollImpl implements of Epoll
 type epollImpl struct {
 	// 句柄
 	fd int

@@ -33,7 +33,7 @@ type Server interface {
 	// 启动服务
 	Start()
 
-	Group(uri string) *Router
+	Group(uri string) Router
 }
 
 
@@ -51,13 +51,14 @@ type Context interface {
 	Error(code int, message string)
 }
 
+// Data 数据项
 type Data map[string]interface{}
 
 // NewServer 多进程server，相比epoll的单进程，降低了延迟
 func NewServer(opts ...Option) Server {
 	e, err := epoll.Create()
 	if err != nil {
-		log.Fatalf("unable to create epoll:%v\n", err)
+		log.Fatalf("failed to create epoll:%v\n", err)
 	}
 
 	// default option
@@ -70,7 +71,7 @@ func NewServer(opts ...Option) Server {
 	}
 
 
-	return &workerPoolServerImpl{
+	return &WorkerPoolServer{
 		engine:      newEngine(),
 		connections: cmap.New(),
 		epoller:     e,

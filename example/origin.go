@@ -15,7 +15,7 @@ func main() {
 	// 监听连接创建事件
 	ws.HandleConnect(func(conn websocket.Connection) {
 		log.Printf("welcome: %s\n", conn.ID())
-		conn.Write([]byte("hello"))
+		_ = conn.Write([]byte("hello"))
 	})
 	// 监听连接断开事件
 	ws.HandleDisconnect(func(conn websocket.Connection) {

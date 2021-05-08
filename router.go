@@ -5,40 +5,51 @@ import (
 	"path"
 )
 
-type Router struct {
+// Router 路由接口，面向接口开发
+type Router interface {
+	// Route 设置路由
+	Route(path string, handler Handler)
+	// Get 获取handler
+	Get(path string) (Handler, bool)
+	// Group 生成分组路由
+	Group(path string) Router
+}
+
+// radixRouter 路由实现
+type radixRouter struct {
 	// 前缀
 	prefix string
 	// 路由树
 	tree *tree.RadixTree
 }
 
-func (router *Router) print() {
+func (router *radixRouter) print() {
 	router.tree.Print("")
 }
 
 // withPrefix 拼接前缀，获取到的是完整url地址
-func (router *Router) withPrefix(uri string) string{
+func (router *radixRouter) withPrefix(uri string) string{
 	return path.Join(router.prefix, uri)
 }
 
-// Group 分组
-func (router *Router) Group(path string) *Router {
+// Group 新生成一个前缀为path的路由
+func (router *radixRouter) Group(path string) Router {
 	path = router.withPrefix(path)
-	child := &Router{prefix: path, tree: router.tree}
+	child := &radixRouter{prefix: path, tree: router.tree}
 	return child
 }
 
 // Use 中间件
-func (router *Router) Use() {
+func (router *radixRouter) Use() {
 	// TODO
 }
 // Route 路由匹配
-func (router *Router) Route(path string, handler Handler)  {
+func (router *radixRouter) Route(path string, handler Handler)  {
 	router.tree.Insert(router.withPrefix(path), handler)
 }
 
 // Get 获取handler
-func (router *Router) Get(path string) (Handler, bool){
+func (router *radixRouter) Get(path string) (Handler, bool){
 	val := router.tree.GetValue(path)
 	if val == nil {
 		return nil, false
@@ -47,8 +58,9 @@ func (router *Router) Get(path string) (Handler, bool){
 	return handler, ok
 }
 
-func NewRouter() *Router {
-	return &Router{
+// NewRouter 获取路由实例
+func NewRouter() Router {
+	return &radixRouter{
 		prefix: "/",
 		tree:   tree.NewRadixTree(),
 	}
