@@ -12,12 +12,19 @@ type Request struct {
 	Body interface{} `json:"body"`
 }
 
-
-func (req Request) jsonMarshal() ([]byte, error) {
-	return json.Marshal(req.Body)
+// Unmarshal use pointer to get body
+func (req Request) Unmarshal(v interface{}) error {
+	// marshal json
+	b, err := json.Marshal(req.Body)
+	if err != nil {
+		return err
+	}
+	// unmarshal json
+	return json.Unmarshal(b, v)
 }
 
-func NewRequest(msg []byte) (req Request, err error) {
+//
+func newRequest(msg []byte) (req Request, err error) {
 	err = json.Unmarshal(msg, &req)
 	return
 }

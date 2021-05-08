@@ -18,9 +18,9 @@ import (
 
 // Connection websocket连接
 type Connection interface {
-	// 唯一标识
+	// ID 唯一标识
 	ID() string
-	// 给客户端发送数据
+	// Write 给客户端发送数据
 	Write(msg []byte) error
 	// 关闭连接
 	close() error

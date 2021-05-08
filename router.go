@@ -58,8 +58,8 @@ func (router *radixRouter) Get(path string) (Handler, bool){
 	return handler, ok
 }
 
-// NewRouter 获取路由实例
-func NewRouter() Router {
+// newRootRouter 获取根路由
+func newRootRouter() Router {
 	return &radixRouter{
 		prefix: "/",
 		tree:   tree.NewRadixTree(),

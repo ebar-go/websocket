@@ -50,6 +50,6 @@ func newEngine() *Engine {
 		notFound: func(ctx Context) {
 			ctx.Error(http.StatusNotFound, "404 not found")
 		},
-		router: NewRouter(),
+		router: newRootRouter(),
 	}
 }

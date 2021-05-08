@@ -1,7 +1,6 @@
 package context
 
 import (
-	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
 	"math"
@@ -36,13 +35,7 @@ func (ctx *Context) RequestUri() string {
 
 // BindJson implement of Context
 func (ctx *Context) BindJson(obj interface{}) error {
-	// marshal json
-	b, err := ctx.request.jsonMarshal()
-	if err != nil {
-		return err
-	}
-	// unmarshal json
-	return json.Unmarshal(b, obj)
+	return ctx.request.Unmarshal(obj)
 }
 
 // Success implement of Context
@@ -83,7 +76,7 @@ func (ctx *Context) Read() error {
 		return  err
 	}
 
-	req, err := NewRequest(message)
+	req, err := newRequest(message)
 	if err != nil {
 		return err
 	}
