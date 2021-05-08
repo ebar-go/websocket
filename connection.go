@@ -70,7 +70,7 @@ func (conn *connection) fd() int {
 }
 
 // newConnection return initialized websocket Connection
-func newConnection(w http.ResponseWriter, r *http.Request) (Connection, error) {
+func newConnection(w http.ResponseWriter, r *http.Request) (*connection, error) {
 	socketConn, err := utils.WebsocketConn(w, r)
 	if err != nil {
 		return nil, err
