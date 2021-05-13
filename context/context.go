@@ -62,13 +62,6 @@ func (ctx *Context) write(code int, message string, data interface{}) {
 	}
 }
 
-// NewContext 获取context的实例
-func NewContext(conn *websocket.Conn) *Context {
-	return &Context{
-		conn: conn,
-	}
-}
-
 // Read 读取socket信息
 func (ctx *Context) Read() error {
 	_, message, err := ctx.conn.ReadMessage()
@@ -84,8 +77,8 @@ func (ctx *Context) Read() error {
 	return nil
 }
 
-// Next 继续执行
-func (ctx *Context) Next() {
+// next 继续执行,暂未实现
+func (ctx *Context) next() {
 	ctx.index++
 	for ctx.index < uint8(len(ctx.handlers)) {
 		ctx.handlers[ctx.index]()
@@ -97,7 +90,7 @@ func (ctx *Context) isAborted() bool {
 	return ctx.index >= abortIndex
 }
 
-// Abort 中断
-func (ctx *Context) Abort() {
+// abort 中断，暂未实现
+func (ctx *Context) abort() {
 	ctx.index = abortIndex
 }

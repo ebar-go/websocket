@@ -38,6 +38,8 @@ type connection struct {
 	sockConn *websocket.Conn
 	// socket连接的文件标识符
 	sockFD int
+
+	ctxBuilder *context.ContextBuilder
 }
 
 // ID implement of Connection
@@ -57,7 +59,7 @@ func (conn *connection) close() error {
 
 // context implement of Connection
 func (conn *connection) context() (Context, error) {
-	ctx := context.NewContext(conn.sockConn)
+	ctx := conn.ctxBuilder.Build()
 	if err := ctx.Read(); err != nil {
 		return nil, err
 	}
@@ -80,6 +82,7 @@ func newConnection(w http.ResponseWriter, r *http.Request) (*connection, error) 
 		id:       uuid.NewV4().String(),
 		sockConn: socketConn,
 		sockFD:   utils.SocketFD(socketConn.UnderlyingConn()),
+		ctxBuilder: context.NewContextBuilder(socketConn),
 	}
 	return conn, nil
 }
