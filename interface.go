@@ -8,49 +8,43 @@
 
 package websocket
 
-import (
-	"github.com/ebar-go/websocket/epoll"
-	cmap "github.com/orcaman/concurrent-map"
-	"log"
-)
+import "net/http"
+
+// Server 接口
+type Server interface {
+	// HandleRequest 处理请求
+	HandleRequest(w http.ResponseWriter, r *http.Request)
+	// Route 设置路由映射
+	Route(uri string, handler Handler)
+	// Close 主动关闭连接
+	Close(conn Connection)
+
+	// TODO 实现通过连接的唯一ID来关闭连接
+
+	// Broadcast 广播
+	Broadcast(message []byte, ignores ...string)
+	// Start 启动服务
+	Start()
+	// Group 分组路由
+	Group(uri string) Router
+}
 
 // Context 上下文
 type Context interface {
-	// 获取header信息
+	// GetHeader 获取header信息
 	GetHeader(key string) string
-	// 获取请求资源
+	// RequestUri 获取请求资源
 	RequestUri() string
-	// 通过json解析body
+	// BindJson 通过json解析body
 	BindJson(obj interface{}) error
-	// 输出成功的数据
-	Success(data interface{})
-	// 错误信息
-	Error(code int, message string)
+	// WriteJson 输出json
+	WriteJson(obj interface{}) error
+	// WriteMessage 输出byte
+	WriteMessage(message []byte) error
+	// WriteString 输出字符串
+	WriteString(message string) error
 }
 
 // Data 数据项
 type Data map[string]interface{}
 
-// NewServer 多进程server，相比epoll的单进程，降低了延迟
-func NewServer(opts ...Option) *Server {
-	e, err := epoll.Create()
-	if err != nil {
-		log.Fatalf("failed to create epoll:%v\n", err)
-	}
-
-	// default option
-	option := options{
-		workers: 50,
-		tasks:   100000,
-	}
-	for _, opt := range opts {
-		opt.apply(&option)
-	}
-
-	return &Server{
-		engine:      newEngine(),
-		connections: cmap.New(),
-		epoller:     e,
-		workers:     newWorkerPool(option.workers, option.tasks),
-	}
-}

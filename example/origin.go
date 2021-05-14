@@ -10,28 +10,25 @@ import (
 )
 
 func main() {
-	ws := websocket.NewServer()
-
-	// 监听连接创建事件
-	ws.HandleConnect(func(conn websocket.Connection) {
-		log.Printf("welcome: %s\n", conn.ID())
-		_ = conn.Write([]byte("hello"))
-	})
-	// 监听连接断开事件
-	ws.HandleDisconnect(func(conn websocket.Connection) {
-		log.Printf("goodbye: %s\n", conn.ID())
-	})
+	ws := websocket.NewBuilder().
+		SetWorkerNumber(50). // 设置并发worker数量，影响吞吐率，默认为50，可根据实际测试数据来评估，可选
+		SetMaxConnectionNumber(100000). // 设置最大连接数，默认为100000，可根据最大并发量来评估，可选
+		SetConnectCallback(func(conn websocket.Connection) { // 设置连接创建回调，可选
+			log.Printf("welcome: %s\n", conn.ID())
+		}).SetDisconnectCallback(func(conn websocket.Connection) { // 设置连接断开回调，可选
+			log.Printf("goodbye: %s\n", conn.ID())
+		}).Build()
 
 	// 路由分组
 	userGroup := ws.Group("user")
 	{
 		// 请求uri为: /user/list
 		userGroup.Route("list", func(ctx websocket.Context) {
-			ctx.Success("this is user list api")
+			_ = ctx.WriteString("this is user list api")
 		})
 		// 请求的uri为/user/create
 		userGroup.Route("create", func(ctx websocket.Context) {
-			ctx.Success("this is user create api")
+			_ = ctx.WriteString("this is user create api")
 		})
 	}
 
@@ -43,10 +40,12 @@ func main() {
 
 		if err := ctx.BindJson(&req); err != nil {
 			log.Println(err)
-			ctx.Error(1001, "参数错误")
+			websocket.Wrap(ctx).Error(1001, "参数错误")
 			return
 		}
-		ctx.Success(websocket.Data{
+
+		// 使用ContextWrapper输出带code的响应内容
+		websocket.Wrap(ctx).Success(websocket.Data{
 			"name": req.Name,
 		})
 	})
@@ -55,7 +54,7 @@ func main() {
 	ws.Start()
 
 	// 绑定http服务
-	http.ListenAndServe(":8085", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	_ = http.ListenAndServe(":8085", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ws.HandleRequest(w, r)
 	}))
 }

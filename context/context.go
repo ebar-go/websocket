@@ -2,7 +2,6 @@ package context
 
 import (
 	"github.com/gorilla/websocket"
-	"log"
 	"math"
 )
 
@@ -28,7 +27,7 @@ func (ctx *Context) GetHeader(key string) string {
 	return ctx.request.Header[key]
 }
 
-// RequestUri
+// RequestUri 获取请求的uri
 func (ctx *Context) RequestUri() string {
 	return ctx.request.Uri
 }
@@ -38,29 +37,19 @@ func (ctx *Context) BindJson(obj interface{}) error {
 	return ctx.request.Unmarshal(obj)
 }
 
-// Success implement of Context
-func (ctx *Context) Success(data interface{}) {
-	ctx.write(0, "success", data)
+func (ctx *Context) WriteJson(obj interface{}) error {
+	return ctx.conn.WriteJSON(obj)
 }
 
-// Error 错误信息
-func (ctx *Context) Error(code int, message string) {
-	ctx.write(code, message, nil)
+func (ctx *Context) WriteMessage(message []byte) error {
+	return ctx.conn.WriteMessage(websocket.TextMessage, message)
 }
 
-// write 发送信息到客户端
-func (ctx *Context) write(code int, message string, data interface{}) {
-	p := Response{
-		Code:    code,
-		Message: message,
-		Data:    data,
-	}.Byte()
 
-	err := ctx.conn.WriteMessage(websocket.TextMessage, p)
-	if err != nil {
-		log.Println("unable to write message:", err.Error())
-	}
+func (ctx *Context) WriteString(message string) error {
+	return ctx.conn.WriteMessage(websocket.TextMessage, []byte(message))
 }
+
 
 // Read 读取socket信息
 func (ctx *Context) Read() error {

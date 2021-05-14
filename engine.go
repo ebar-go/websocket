@@ -4,7 +4,6 @@ package websocket
 
 import (
 	"fmt"
-	"net/http"
 )
 
 // Engine 路由引擎
@@ -41,7 +40,7 @@ func (engine *Engine) NoRoute(handler Handler) {
 
 // notFoundHandler 默认的404处理器
 func notFoundHandler(ctx Context) {
-	ctx.Error(http.StatusNotFound, fmt.Sprintf("%s not found", ctx.RequestUri()))
+	_ = ctx.WriteString(fmt.Sprintf("%s not found", ctx.RequestUri()))
 }
 
 // newEngine 实例
